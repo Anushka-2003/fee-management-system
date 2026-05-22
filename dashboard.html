@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – Fee Management System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-container">
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <div class="page-title">📊 Dashboard</div>
+      <div class="top-bar-right">
+        <label for="sessionSelect" style="font-size:12px;color:#666;font-weight:600;">Session:</label>
+        <select id="sessionSelect" class="filter-select" style="min-width:120px;" onchange="onSessionChange(this.value)"></select>
+        <span class="session-badge" id="sessionBadge">2026-2027</span>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- Stats -->
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <!-- Class-wise Summary -->
+      <div class="section-card">
+        <div class="section-header">
+          <h3>📚 Class-wise Fee Summary (Current Session)</h3>
+        </div>
+        <div class="section-body">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Class</th>
+                  <th>Total Students</th>
+                  <th>Paid This Month</th>
+                  <th>Pending</th>
+                  <th>Amount Collected</th>
+                </tr>
+              </thead>
+              <tbody id="classWiseBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Payments -->
+      <div class="section-card">
+        <div class="section-header">
+          <h3>🕐 Recent Fee Payments</h3>
+          <a href="fees.html" class="btn btn-primary btn-sm">+ Record Fee</a>
+        </div>
+        <div class="section-body">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Receipt No</th>
+                  <th>Student</th>
+                  <th>Class</th>
+                  <th>Month</th>
+                  <th>Amount</th>
+                  <th>Mode</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="recentFeesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main-content -->
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+renderSidebar('dashboard');
+initDashboard();
+
+function initDashboard() {
+  const session = FeeDB.getCurrentSession();
+  populateSelect(document.getElementById('sessionSelect'), SESSIONS, session);
+
+  renderStats(session);
+  renderClassWise(session);
+  renderRecentFees();
+}
+
+function onSessionChange(session) {
+  FeeDB.setCurrentSession(session);
+  document.getElementById('sessionBadge').textContent = 'Session: ' + session;
+  renderStats(session);
+  renderClassWise(session);
+}
+
+function renderStats(session) {
+  const students    = FeeDB.getStudents();
+  const todayAmt    = FeeDB.getTodayCollection();
+  const monthAmt    = FeeDB.getMonthCollection();
+  const sessionAmt  = FeeDB.getSessionCollection(session);
+  const sessionFees = FeeDB.getFeesBySession(session);
+  const nowMonth    = MONTHS[new Date().getMonth() <= 2 ? new Date().getMonth() + 9 : new Date().getMonth() - 3]; // April-start
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-icon blue">👥</div>
+      <div>
+        <div class="stat-label">Total Students</div>
+        <div class="stat-value">${students.length}</div>
+        <div class="stat-sub">Enrolled</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">💵</div>
+      <div>
+        <div class="stat-label">Today's Collection</div>
+        <div class="stat-value">${formatCurrency(todayAmt)}</div>
+        <div class="stat-sub">${new Date().toLocaleDateString('en-IN')}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange">📅</div>
+      <div>
+        <div class="stat-label">This Month</div>
+        <div class="stat-value">${formatCurrency(monthAmt)}</div>
+        <div class="stat-sub">Current Calendar Month</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon blue">🏦</div>
+      <div>
+        <div class="stat-label">Session Total</div>
+        <div class="stat-value">${formatCurrency(sessionAmt)}</div>
+        <div class="stat-sub">Session ${session}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon purple">🧾</div>
+      <div>
+        <div class="stat-label">Receipts Issued</div>
+        <div class="stat-value">${sessionFees.length}</div>
+        <div class="stat-sub">This Session</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderClassWise(session) {
+  const fees = FeeDB.getFeesBySession(session);
+  const currentMonthName = MONTHS[new Date().getMonth() <= 2 ? new Date().getMonth() + 9 : new Date().getMonth() - 3];
+  const tbody = document.getElementById('classWiseBody');
+
+  const rows = CLASSES.map(cls => {
+    const clsStudents = FeeDB.getStudentsByClass(cls);
+    if (!clsStudents.length) return null;
+    const paidIds = new Set(
+      fees.filter(f => clsStudents.some(s => s.id === f.studentId) && f.month === currentMonthName)
+          .map(f => f.studentId)
+    );
+    const collected = fees
+      .filter(f => clsStudents.some(s => s.id === f.studentId))
+      .reduce((s, f) => s + (f.total || 0), 0);
+
+    return { cls, total: clsStudents.length, paid: paidIds.size, pending: clsStudents.length - paidIds.size, collected };
+  }).filter(Boolean);
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td><strong>${escHtml(r.cls)}</strong></td>
+      <td class="text-center">${r.total}</td>
+      <td class="text-center"><span class="badge badge-success">${r.paid}</span></td>
+      <td class="text-center">${r.pending > 0 ? `<span class="badge badge-warning">${r.pending}</span>` : '<span class="badge badge-success">0</span>'}</td>
+      <td class="text-green">${formatCurrency(r.collected)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderRecentFees() {
+  const recent = FeeDB.getRecentFees(12);
+  const tbody  = document.getElementById('recentFeesBody');
+  if (!recent.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding:40px;color:#999;">No fee records yet. <a href="fees.html" style="color:var(--primary);">Record first payment →</a></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = recent.map(fee => {
+    const student = FeeDB.getStudentById(fee.studentId);
+    return `<tr>
+      <td><span class="badge badge-info">${escHtml(fee.receiptNo)}</span></td>
+      <td>${escHtml(student?.name || '—')}</td>
+      <td>${escHtml(student?.class || '—')}</td>
+      <td>${escHtml(fee.month)}</td>
+      <td class="text-green fw-bold">${formatCurrency(fee.total)}</td>
+      <td>${escHtml(fee.paymentMode)}</td>
+      <td>${formatDate(fee.paymentDate)}</td>
+    </tr>`;
+  }).join('');
+}
+</script>
+</body>
+</html>

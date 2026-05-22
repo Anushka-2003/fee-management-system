@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Record Fees – Fee Management System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-container">
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <div class="page-title">💰 Record Fee Payment</div>
+      <div class="top-bar-right">
+        <span class="session-badge" id="sessionBadge"></span>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div style="display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start;" id="mainGrid">
+
+        <!-- LEFT: FEE FORM -->
+        <div class="section-card" style="margin-bottom:0">
+          <div class="section-header">
+            <h3>🧾 New Fee Entry</h3>
+          </div>
+          <div class="section-body">
+
+            <!-- Student Search -->
+            <div class="form-section-title">Student Information</div>
+            <div class="form-group" style="position:relative">
+              <label>Search Student <span style="color:red">*</span></label>
+              <input type="text" id="studentSearch" placeholder="Type name, serial no, or class…" oninput="searchStudents()" autocomplete="off">
+              <div id="studentDropdown" style="position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--primary);border-top:none;border-radius:0 0 8px 8px;max-height:220px;overflow-y:auto;z-index:100;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
+            </div>
+            <div id="selectedStudentCard" class="hidden" style="background:#F5F7FA;border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-weight:700;font-size:14px;" id="cardName"></div>
+                <div style="font-size:12px;color:#666;margin-top:2px;" id="cardDetails"></div>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="clearStudent()">✕ Change</button>
+            </div>
+            <input type="hidden" id="selectedStudentId">
+
+            <!-- Session & Month -->
+            <div class="form-section-title">Session Details</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Academic Session <span style="color:red">*</span></label>
+                <select id="f_session" onchange="checkDuplicate()">
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Month <span style="color:red">*</span></label>
+                <select id="f_month" onchange="checkDuplicate()">
+                  <option value="">Select Month</option>
+                </select>
+              </div>
+            </div>
+            <div id="duplicateWarning" class="alert alert-warning hidden">
+              ⚠️ A fee record already exists for this student for this month. Check before saving.
+            </div>
+
+            <!-- Fee Breakdown -->
+            <div class="form-section-title">Fee Breakdown</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tuition Fee (₹)</label>
+                <input type="number" id="f_tuition" placeholder="0.00" min="0" step="0.01" oninput="recalcTotal()">
+              </div>
+              <div class="form-group">
+                <label>Registration Fee (₹)</label>
+                <input type="number" id="f_registration" placeholder="0.00" min="0" step="0.01" oninput="recalcTotal()">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Exam Fee (₹)</label>
+                <input type="number" id="f_exam" placeholder="0.00" min="0" step="0.01" oninput="recalcTotal()">
+              </div>
+              <div class="form-group">
+                <label>Miscellaneous (₹)</label>
+                <input type="number" id="f_misc" placeholder="0.00" min="0" step="0.01" oninput="recalcTotal()">
+              </div>
+            </div>
+
+            <!-- Fee Total Box -->
+            <div class="fee-summary-box">
+              <div class="fee-sum-title">💰 Fee Summary</div>
+              <div class="fee-row"><span>Tuition Fee</span><span id="sum_tuition">₹0.00</span></div>
+              <div class="fee-row"><span>Registration Fee</span><span id="sum_reg">₹0.00</span></div>
+              <div class="fee-row"><span>Exam Fee</span><span id="sum_exam">₹0.00</span></div>
+              <div class="fee-row"><span>Miscellaneous</span><span id="sum_misc">₹0.00</span></div>
+              <div class="fee-row total"><span>Total Amount</span><span id="sum_total">₹0.00</span></div>
+            </div>
+
+            <!-- Payment Mode Section -->
+            <div class="form-section-title" style="margin-top:20px;">💳 Payment Mode</div>
+            <div class="payment-mode-grid" id="paymentModeGrid"></div>
+            <input type="hidden" id="f_paymentMode" value="">
+
+            <div class="form-group mt-3" id="refGroup" style="display:none;">
+              <label id="refLabel">Reference / Cheque Number</label>
+              <input type="text" id="f_transRef" placeholder="Transaction / Cheque / DD number">
+            </div>
+
+            <!-- Payment Date & Remarks -->
+            <div class="form-section-title" style="margin-top:16px;">Payment Details</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Payment Date <span style="color:red">*</span></label>
+                <input type="date" id="f_paymentDate">
+              </div>
+              <div class="form-group">
+                <label>Remarks</label>
+                <input type="text" id="f_remarks" placeholder="Optional notes">
+              </div>
+            </div>
+
+            <div class="modal-footer" style="border:none;padding:0;margin-top:8px;">
+              <button class="btn btn-ghost" onclick="resetForm()">🔄 Reset</button>
+              <button class="btn btn-success btn-full" onclick="saveFee()" style="flex:1;">✅ Save & Print Receipt</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: RECENT FEES FOR STUDENT -->
+        <div>
+          <div class="section-card" style="margin-bottom:0;" id="studentFeeHistory">
+            <div class="section-header"><h3>📜 Student Fee History</h3></div>
+            <div class="section-body" id="studentFeeHistoryBody">
+              <div class="empty-state" style="padding:28px 16px;">
+                <div class="empty-icon">🔍</div>
+                <div class="empty-title">Select a student</div>
+                <div class="empty-desc">Their fee history will appear here.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /mainGrid -->
+    </div>
+  </div>
+</div>
+
+<!-- ===== RECEIPT MODAL ===== -->
+<div class="modal-overlay" id="receiptModal">
+  <div class="modal modal-lg">
+    <div class="modal-header no-print">
+      <h3>🧾 Fee Receipt</h3>
+      <button class="modal-close" onclick="closeModal('receiptModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="receipt-wrapper" id="receiptContent"></div>
+    </div>
+    <div class="modal-footer no-print">
+      <button class="btn btn-ghost" onclick="closeModal('receiptModal')">Close</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ Print Receipt</button>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+renderSidebar('fees');
+
+// Init
+populateSelect(document.getElementById('f_session'), SESSIONS, FeeDB.getCurrentSession());
+MONTHS.forEach(m => {
+  document.getElementById('f_month').innerHTML += `<option value="${m}">${m}</option>`;
+});
+document.getElementById('f_paymentDate').value = todayISO();
+
+// Render payment mode cards
+const pmGrid = document.getElementById('paymentModeGrid');
+PAYMENT_MODES.forEach(mode => {
+  const card = document.createElement('div');
+  card.className = 'payment-mode-card';
+  card.dataset.mode = mode.id;
+  card.innerHTML = `<div class="mode-icon">${mode.icon}</div><div>${mode.label}</div>`;
+  card.onclick = () => selectPaymentMode(mode.id);
+  pmGrid.appendChild(card);
+});
+// Default: Cash
+selectPaymentMode('Cash');
+
+// ===== STUDENT SEARCH =====
+function searchStudents() {
+  const q = document.getElementById('studentSearch').value.trim();
+  const dropdown = document.getElementById('studentDropdown');
+  if (!q) { dropdown.style.display = 'none'; return; }
+
+  const results = FeeDB.searchStudents(q).slice(0, 8);
+  if (!results.length) {
+    dropdown.innerHTML = `<div style="padding:12px;color:#999;font-size:13px;">No students found</div>`;
+  } else {
+    dropdown.innerHTML = results.map(s => `
+      <div onclick="selectStudent('${s.id}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:13.5px;" onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background=''">
+        <strong>${escHtml(s.name)}</strong>
+        <span style="color:#888;font-size:12px;"> &bull; ${escHtml(s.class)} ${escHtml(s.section || '')} &bull; #${s.serialNo}</span>
+      </div>
+    `).join('');
+  }
+  dropdown.style.display = 'block';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#studentSearch') && !e.target.closest('#studentDropdown')) {
+    document.getElementById('studentDropdown').style.display = 'none';
+  }
+});
+
+function selectStudent(id) {
+  const s = FeeDB.getStudentById(id);
+  if (!s) return;
+  document.getElementById('selectedStudentId').value = id;
+  document.getElementById('studentSearch').value = '';
+  document.getElementById('studentDropdown').style.display = 'none';
+  document.getElementById('selectedStudentCard').classList.remove('hidden');
+  document.getElementById('selectedStudentCard').style.display = 'flex';
+  document.getElementById('cardName').textContent = s.name;
+  document.getElementById('cardDetails').textContent = `${s.class}${s.section ? ' – Sec ' + s.section : ''} | Roll: ${s.rollNo || '—'} | Father: ${s.fatherName || '—'}`;
+  renderStudentHistory(id);
+  checkDuplicate();
+
+  // Auto-fill tuition fee based on class
+  const tuitionMap = { 'Nursery': 500, 'KG': 500, 'Class 1': 600, 'Class 2': 600, 'Class 3': 700, 'Class 4': 700, 'Class 5': 800, 'Class 6': 900, 'Class 7': 900, 'Class 8': 1000 };
+  const tuition = tuitionMap[s.class] || 0;
+  if (tuition) {
+    document.getElementById('f_tuition').value = tuition;
+    recalcTotal();
+  }
+}
+
+function clearStudent() {
+  document.getElementById('selectedStudentId').value = '';
+  document.getElementById('studentSearch').value = '';
+  document.getElementById('selectedStudentCard').style.display = 'none';
+  document.getElementById('selectedStudentCard').classList.add('hidden');
+  document.getElementById('studentFeeHistoryBody').innerHTML = `
+    <div class="empty-state" style="padding:28px 16px;">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">Select a student</div>
+      <div class="empty-desc">Their fee history will appear here.</div>
+    </div>`;
+  document.getElementById('duplicateWarning').classList.add('hidden');
+}
+
+function renderStudentHistory(studentId) {
+  const fees = FeeDB.getFeesByStudent(studentId)
+    .sort((a, b) => new Date(b.paymentDate) - new Date(a.paymentDate));
+  const body = document.getElementById('studentFeeHistoryBody');
+  if (!fees.length) {
+    body.innerHTML = `<div class="empty-state" style="padding:24px 16px;"><div class="empty-icon">💸</div><div class="empty-title">No payments yet</div></div>`;
+    return;
+  }
+  const total = fees.reduce((s, f) => s + (f.total || 0), 0);
+  body.innerHTML = `
+    <div class="alert alert-success" style="margin-bottom:12px;">Total Paid: <strong>${formatCurrency(total)}</strong></div>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Month</th><th>Session</th><th>Amount</th><th>Mode</th></tr></thead>
+        <tbody>${fees.map(f => `
+          <tr>
+            <td>${escHtml(f.month)}</td>
+            <td>${escHtml(f.session)}</td>
+            <td class="text-green">${formatCurrency(f.total)}</td>
+            <td><span class="badge badge-info">${escHtml(f.paymentMode)}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ===== PAYMENT MODE =====
+function selectPaymentMode(modeId) {
+  document.querySelectorAll('.payment-mode-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.mode === modeId);
+  });
+  document.getElementById('f_paymentMode').value = modeId;
+  const refGroup = document.getElementById('refGroup');
+  const refLabel = document.getElementById('refLabel');
+  if (['Online Transfer', 'UPI', 'Cheque', 'Demand Draft'].includes(modeId)) {
+    refGroup.style.display = '';
+    const labels = { 'Online Transfer': 'Transaction Reference Number', 'UPI': 'UPI Transaction ID', 'Cheque': 'Cheque Number', 'Demand Draft': 'DD Number' };
+    refLabel.textContent = labels[modeId] || 'Reference Number';
+  } else {
+    refGroup.style.display = 'none';
+    document.getElementById('f_transRef').value = '';
+  }
+}
+
+// ===== FEE CALCULATION =====
+function recalcTotal() {
+  const t = parseFloat(document.getElementById('f_tuition').value) || 0;
+  const r = parseFloat(document.getElementById('f_registration').value) || 0;
+  const e = parseFloat(document.getElementById('f_exam').value) || 0;
+  const m = parseFloat(document.getElementById('f_misc').value) || 0;
+  document.getElementById('sum_tuition').textContent = formatCurrency(t);
+  document.getElementById('sum_reg').textContent     = formatCurrency(r);
+  document.getElementById('sum_exam').textContent    = formatCurrency(e);
+  document.getElementById('sum_misc').textContent    = formatCurrency(m);
+  document.getElementById('sum_total').textContent   = formatCurrency(t + r + e + m);
+}
+
+// ===== DUPLICATE CHECK =====
+function checkDuplicate() {
+  const studentId = document.getElementById('selectedStudentId').value;
+  const session   = document.getElementById('f_session').value;
+  const month     = document.getElementById('f_month').value;
+  const warn      = document.getElementById('duplicateWarning');
+  if (!studentId || !session || !month) { warn.classList.add('hidden'); return; }
+  const exists = FeeDB.getFees().some(f => f.studentId === studentId && f.session === session && f.month === month);
+  warn.classList.toggle('hidden', !exists);
+}
+
+// ===== SAVE FEE =====
+function saveFee() {
+  const studentId   = document.getElementById('selectedStudentId').value;
+  const session     = document.getElementById('f_session').value;
+  const month       = document.getElementById('f_month').value;
+  const paymentMode = document.getElementById('f_paymentMode').value;
+  const paymentDate = document.getElementById('f_paymentDate').value;
+  const tuition     = parseFloat(document.getElementById('f_tuition').value) || 0;
+  const reg         = parseFloat(document.getElementById('f_registration').value) || 0;
+  const exam        = parseFloat(document.getElementById('f_exam').value) || 0;
+  const misc        = parseFloat(document.getElementById('f_misc').value) || 0;
+
+  if (!studentId)   { showToast('Please select a student', 'error'); return; }
+  if (!session)     { showToast('Please select a session', 'error'); return; }
+  if (!month)       { showToast('Please select a month', 'error'); return; }
+  if (!paymentMode) { showToast('Please select a payment mode', 'error'); return; }
+  if (!paymentDate) { showToast('Please enter payment date', 'error'); return; }
+  if (tuition + reg + exam + misc === 0) { showToast('Please enter at least one fee amount', 'error'); return; }
+
+  const fee = FeeDB.addFee({
+    studentId, session, month,
+    tuitionFee: tuition,
+    registrationFee: reg,
+    examFee: exam,
+    miscFee: misc,
+    paymentDate, paymentMode,
+    transactionRef: document.getElementById('f_transRef').value.trim(),
+    remarks: document.getElementById('f_remarks').value.trim()
+  });
+
+  showToast('Fee recorded! Receipt No: ' + fee.receiptNo, 'success');
+  showReceipt(fee.id);
+  resetForm();
+}
+
+function showReceipt(feeId) {
+  const fee = FeeDB.getFeeById(feeId);
+  if (!fee) return;
+  const student = FeeDB.getStudentById(fee.studentId);
+  document.getElementById('receiptContent').innerHTML = buildReceiptHTML(fee, student);
+  openModal('receiptModal');
+}
+
+// ===== RESET =====
+function resetForm() {
+  clearStudent();
+  document.getElementById('f_tuition').value = '';
+  document.getElementById('f_registration').value = '';
+  document.getElementById('f_exam').value = '';
+  document.getElementById('f_misc').value = '';
+  document.getElementById('f_transRef').value = '';
+  document.getElementById('f_remarks').value = '';
+  document.getElementById('f_paymentDate').value = todayISO();
+  document.getElementById('f_month').value = '';
+  document.getElementById('duplicateWarning').classList.add('hidden');
+  recalcTotal();
+  selectPaymentMode('Cash');
+  populateSelect(document.getElementById('f_session'), SESSIONS, FeeDB.getCurrentSession());
+}
+
+// Responsive grid
+function adjustLayout() {
+  const grid = document.getElementById('mainGrid');
+  if (window.innerWidth < 900) grid.style.gridTemplateColumns = '1fr';
+  else grid.style.gridTemplateColumns = '1fr 380px';
+}
+window.addEventListener('resize', adjustLayout);
+adjustLayout();
+</script>
+</body>
+</html>

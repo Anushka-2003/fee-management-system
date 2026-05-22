@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports – Fee Management System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-container">
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <div class="page-title">📋 Reports</div>
+      <div class="top-bar-right">
+        <span class="session-badge" id="sessionBadge"></span>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- Tab Navigation -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;" class="no-print">
+        <button class="btn btn-primary btn-sm tab-btn" onclick="showTab('fee-history')" id="tab-fee-history">📜 Fee History</button>
+        <button class="btn btn-ghost btn-sm tab-btn" onclick="showTab('defaulters')" id="tab-defaulters">⚠️ Defaulters</button>
+        <button class="btn btn-ghost btn-sm tab-btn" onclick="showTab('student-ledger')" id="tab-student-ledger">📒 Student Ledger</button>
+      </div>
+
+      <!-- ===== TAB 1: FEE HISTORY ===== -->
+      <div id="tab-fee-history-content">
+        <div class="section-card">
+          <div class="section-header">
+            <h3>📜 Fee Payment History</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;" class="no-print">
+              <button class="btn btn-ghost btn-sm" onclick="exportFeeHistory()">⬇ Export CSV</button>
+            </div>
+          </div>
+          <div class="section-body">
+            <!-- Filters -->
+            <div class="filter-bar no-print">
+              <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="fhSearch" placeholder="Search student name…" oninput="renderFeeHistory()">
+              </div>
+              <select id="fhSession" class="filter-select" onchange="renderFeeHistory()">
+                <option value="all">All Sessions</option>
+              </select>
+              <select id="fhClass" class="filter-select" onchange="renderFeeHistory()">
+                <option value="all">All Classes</option>
+              </select>
+              <select id="fhMonth" class="filter-select" onchange="renderFeeHistory()">
+                <option value="all">All Months</option>
+              </select>
+              <select id="fhMode" class="filter-select" onchange="renderFeeHistory()">
+                <option value="all">All Modes</option>
+              </select>
+            </div>
+
+            <div id="fhSummary" class="alert alert-info" style="margin-bottom:12px;"></div>
+
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Receipt No</th>
+                    <th>Student</th>
+                    <th>Class</th>
+                    <th>Session</th>
+                    <th>Month</th>
+                    <th>Tuition</th>
+                    <th>Reg.</th>
+                    <th>Exam</th>
+                    <th>Misc</th>
+                    <th>Total</th>
+                    <th>Mode</th>
+                    <th>Date</th>
+                    <th class="no-print">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="feeHistoryBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB 2: DEFAULTERS ===== -->
+      <div id="tab-defaulters-content" class="hidden">
+        <div class="section-card">
+          <div class="section-header">
+            <h3>⚠️ Fee Defaulters</h3>
+            <button class="btn btn-ghost btn-sm no-print" onclick="exportDefaulters()">⬇ Export CSV</button>
+          </div>
+          <div class="section-body">
+            <div class="filter-bar no-print">
+              <div class="form-group" style="margin:0;">
+                <select id="defSession" class="filter-select" onchange="renderDefaulters()">
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <select id="defMonth" class="filter-select" onchange="renderDefaulters()">
+                  <option value="">Select Month</option>
+                </select>
+              </div>
+              <select id="defClass" class="filter-select" onchange="renderDefaulters()">
+                <option value="all">All Classes</option>
+              </select>
+            </div>
+            <div id="defaultersSummary" class="alert alert-warning hidden" style="margin-bottom:12px;"></div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>S.No</th>
+                    <th>Student Name</th>
+                    <th>Father's Name</th>
+                    <th>Class</th>
+                    <th>Section</th>
+                    <th>Roll No</th>
+                    <th>Phone</th>
+                  </tr>
+                </thead>
+                <tbody id="defaultersBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB 3: STUDENT LEDGER ===== -->
+      <div id="tab-student-ledger-content" class="hidden">
+        <div class="section-card">
+          <div class="section-header">
+            <h3>📒 Student Fee Ledger</h3>
+          </div>
+          <div class="section-body">
+            <div class="filter-bar no-print" style="margin-bottom:20px;">
+              <div class="search-box" style="max-width:360px;">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="ledgerSearch" placeholder="Search student…" oninput="renderLedgerSearch()">
+                <div id="ledgerDropdown" style="position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--primary);border-top:none;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:100;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
+              </div>
+              <select id="ledgerSession" class="filter-select" onchange="renderLedger()">
+              </select>
+            </div>
+
+            <div id="ledgerContent">
+              <div class="empty-state">
+                <div class="empty-icon">📒</div>
+                <div class="empty-title">Select a student</div>
+                <div class="empty-desc">Search and select a student to view their full fee ledger.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main-content -->
+</div>
+
+<!-- ===== RECEIPT MODAL ===== -->
+<div class="modal-overlay" id="receiptModal">
+  <div class="modal modal-lg">
+    <div class="modal-header no-print">
+      <h3>🧾 Fee Receipt</h3>
+      <button class="modal-close" onclick="closeModal('receiptModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="receipt-wrapper" id="receiptContent"></div>
+    </div>
+    <div class="modal-footer no-print">
+      <button class="btn btn-ghost" onclick="closeModal('receiptModal')">Close</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ Print Receipt</button>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+renderSidebar('reports');
+
+// Populate filters
+SESSIONS.forEach(s => {
+  document.getElementById('fhSession').innerHTML += `<option value="${s}">${s}</option>`;
+  document.getElementById('defSession').innerHTML += `<option value="${s}">${s}</option>`;
+  document.getElementById('ledgerSession').innerHTML += `<option value="${s}">${s}</option>`;
+});
+CLASSES.forEach(c => {
+  document.getElementById('fhClass').innerHTML += `<option value="${c}">${c}</option>`;
+  document.getElementById('defClass').innerHTML += `<option value="${c}">${c}</option>`;
+});
+MONTHS.forEach(m => {
+  document.getElementById('fhMonth').innerHTML += `<option value="${m}">${m}</option>`;
+  document.getElementById('defMonth').innerHTML += `<option value="${m}">${m}</option>`;
+});
+PAYMENT_MODES.forEach(p => {
+  document.getElementById('fhMode').innerHTML += `<option value="${p.id}">${p.label}</option>`;
+});
+
+// Set defaults to current session
+const curSession = FeeDB.getCurrentSession();
+document.getElementById('fhSession').value = curSession;
+document.getElementById('defSession').value = curSession;
+document.getElementById('ledgerSession').value = curSession;
+document.getElementById('defMonth').value = MONTHS[new Date().getMonth() <= 2 ? new Date().getMonth() + 9 : new Date().getMonth() - 3] || 'April';
+
+renderFeeHistory();
+renderDefaulters();
+
+let ledgerStudentId = null;
+
+// ===== TAB SWITCHING =====
+function showTab(tab) {
+  ['fee-history','defaulters','student-ledger'].forEach(t => {
+    document.getElementById(`tab-${t}-content`).classList.toggle('hidden', t !== tab);
+    const btn = document.getElementById(`tab-${t}`);
+    btn.className = t === tab ? 'btn btn-primary btn-sm tab-btn' : 'btn btn-ghost btn-sm tab-btn';
+  });
+}
+
+// ===== FEE HISTORY =====
+function getFilteredFees() {
+  const q       = (document.getElementById('fhSearch').value || '').toLowerCase();
+  const session = document.getElementById('fhSession').value;
+  const cls     = document.getElementById('fhClass').value;
+  const month   = document.getElementById('fhMonth').value;
+  const mode    = document.getElementById('fhMode').value;
+
+  return FeeDB.getFees()
+    .filter(f => {
+      if (session !== 'all' && f.session !== session) return false;
+      if (month   !== 'all' && f.month   !== month)   return false;
+      if (mode    !== 'all' && f.paymentMode !== mode) return false;
+      const student = FeeDB.getStudentById(f.studentId);
+      if (cls !== 'all' && student?.class !== cls)     return false;
+      if (q && !student?.name?.toLowerCase().includes(q)) return false;
+      return true;
+    })
+    .sort((a, b) => new Date(b.paymentDate) - new Date(a.paymentDate));
+}
+
+function renderFeeHistory() {
+  const fees  = getFilteredFees();
+  const total = fees.reduce((s, f) => s + (f.total || 0), 0);
+  document.getElementById('fhSummary').innerHTML = `🧾 <strong>${fees.length}</strong> records &nbsp;|&nbsp; Total: <strong>${formatCurrency(total)}</strong>`;
+
+  const tbody = document.getElementById('feeHistoryBody');
+  if (!fees.length) {
+    tbody.innerHTML = `<tr><td colspan="13"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No records found</div><div class="empty-desc">Try adjusting the filters.</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = fees.map(fee => {
+    const student = FeeDB.getStudentById(fee.studentId);
+    return `<tr>
+      <td><span class="badge badge-info">${escHtml(fee.receiptNo)}</span></td>
+      <td><strong>${escHtml(student?.name || '—')}</strong></td>
+      <td>${escHtml(student?.class || '—')}</td>
+      <td>${escHtml(fee.session)}</td>
+      <td>${escHtml(fee.month)}</td>
+      <td>${fee.tuitionFee > 0 ? formatCurrency(fee.tuitionFee) : '—'}</td>
+      <td>${fee.registrationFee > 0 ? formatCurrency(fee.registrationFee) : '—'}</td>
+      <td>${fee.examFee > 0 ? formatCurrency(fee.examFee) : '—'}</td>
+      <td>${fee.miscFee > 0 ? formatCurrency(fee.miscFee) : '—'}</td>
+      <td class="text-green fw-bold">${formatCurrency(fee.total)}</td>
+      <td><span class="badge badge-purple">${escHtml(fee.paymentMode)}</span></td>
+      <td>${formatDate(fee.paymentDate)}</td>
+      <td class="no-print">
+        <div class="actions-cell">
+          <button class="btn btn-outline btn-sm" onclick="viewReceipt('${fee.id}')">🖨 Receipt</button>
+          ${isAdmin() ? `<button class="btn btn-danger btn-sm" onclick="deleteFeeRecord('${fee.id}')">🗑</button>` : ''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function exportFeeHistory() {
+  const fees = getFilteredFees();
+  const headers = ['Receipt No','Student','Class','Session','Month','Tuition','Registration','Exam','Misc','Total','Payment Mode','Date'];
+  const rows = [headers, ...fees.map(f => {
+    const s = FeeDB.getStudentById(f.studentId);
+    return [f.receiptNo, s?.name||'', s?.class||'', f.session, f.month, f.tuitionFee||0, f.registrationFee||0, f.examFee||0, f.miscFee||0, f.total||0, f.paymentMode, f.paymentDate];
+  })];
+  exportToCSV(rows, 'fee_history_' + new Date().toISOString().split('T')[0] + '.csv');
+  showToast('Fee history exported', 'success');
+}
+
+function viewReceipt(feeId) {
+  const fee = FeeDB.getFeeById(feeId);
+  if (!fee) return;
+  const student = FeeDB.getStudentById(fee.studentId);
+  document.getElementById('receiptContent').innerHTML = buildReceiptHTML(fee, student);
+  openModal('receiptModal');
+}
+
+function deleteFeeRecord(feeId) {
+  const fee = FeeDB.getFeeById(feeId);
+  if (!fee || !confirm(`Delete receipt ${fee.receiptNo}? This cannot be undone.`)) return;
+  FeeDB.deleteFee(feeId);
+  showToast('Fee record deleted', 'info');
+  renderFeeHistory();
+}
+
+// ===== DEFAULTERS =====
+function renderDefaulters() {
+  const session = document.getElementById('defSession').value;
+  const month   = document.getElementById('defMonth').value;
+  const cls     = document.getElementById('defClass').value;
+
+  if (!month) {
+    document.getElementById('defaultersBody').innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding:20px;">Please select a month to view defaulters.</td></tr>`;
+    document.getElementById('defaultersSummary').classList.add('hidden');
+    return;
+  }
+
+  let defaulters = FeeDB.getDefaulters(session, month);
+  if (cls !== 'all') defaulters = defaulters.filter(s => s.class === cls);
+
+  const summary = document.getElementById('defaultersSummary');
+  if (defaulters.length) {
+    summary.classList.remove('hidden');
+    summary.innerHTML = `⚠️ <strong>${defaulters.length}</strong> student(s) have NOT paid fees for <strong>${month}</strong> (Session: ${session})`;
+  } else {
+    summary.classList.remove('hidden');
+    summary.className = 'alert alert-success';
+    summary.innerHTML = `✅ All students have paid fees for <strong>${month}</strong>!`;
+  }
+
+  const tbody = document.getElementById('defaultersBody');
+  if (!defaulters.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state" style="padding:24px;"><div class="empty-icon">✅</div><div class="empty-title">No defaulters!</div><div class="empty-desc">All students have paid for ${month}.</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = defaulters.map(s => `
+    <tr>
+      <td>${s.serialNo}</td>
+      <td><strong>${escHtml(s.name)}</strong></td>
+      <td>${escHtml(s.fatherName || '—')}</td>
+      <td>${escHtml(s.class)}</td>
+      <td>${escHtml(s.section || '—')}</td>
+      <td>${s.rollNo || '—'}</td>
+      <td>${escHtml(s.phone || '—')}</td>
+    </tr>
+  `).join('');
+}
+
+function exportDefaulters() {
+  const session = document.getElementById('defSession').value;
+  const month   = document.getElementById('defMonth').value;
+  const cls     = document.getElementById('defClass').value;
+  if (!month) { showToast('Please select a month first', 'error'); return; }
+  let defaulters = FeeDB.getDefaulters(session, month);
+  if (cls !== 'all') defaulters = defaulters.filter(s => s.class === cls);
+  const headers = ['S.No','Name',"Father's Name",'Class','Section','Roll No','Phone'];
+  const rows = [headers, ...defaulters.map(s => [s.serialNo, s.name, s.fatherName, s.class, s.section, s.rollNo, s.phone])];
+  exportToCSV(rows, `defaulters_${month}_${session}.csv`);
+  showToast('Defaulters list exported', 'success');
+}
+
+// ===== STUDENT LEDGER =====
+function renderLedgerSearch() {
+  const q = document.getElementById('ledgerSearch').value.trim();
+  const dd = document.getElementById('ledgerDropdown');
+  if (!q) { dd.style.display = 'none'; return; }
+  const results = FeeDB.searchStudents(q).slice(0, 8);
+  if (!results.length) {
+    dd.innerHTML = `<div style="padding:12px;color:#999;font-size:13px;">No students found</div>`;
+  } else {
+    dd.innerHTML = results.map(s => `
+      <div onclick="setLedgerStudent('${s.id}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:13.5px;" onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background=''">
+        <strong>${escHtml(s.name)}</strong>
+        <span style="color:#888;font-size:12px;"> &bull; ${escHtml(s.class)} &bull; #${s.serialNo}</span>
+      </div>
+    `).join('');
+  }
+  dd.style.display = 'block';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#ledgerSearch') && !e.target.closest('#ledgerDropdown')) {
+    document.getElementById('ledgerDropdown').style.display = 'none';
+  }
+});
+
+function setLedgerStudent(id) {
+  ledgerStudentId = id;
+  const s = FeeDB.getStudentById(id);
+  document.getElementById('ledgerSearch').value = s ? s.name : '';
+  document.getElementById('ledgerDropdown').style.display = 'none';
+  renderLedger();
+}
+
+function renderLedger() {
+  if (!ledgerStudentId) return;
+  const s       = FeeDB.getStudentById(ledgerStudentId);
+  const session = document.getElementById('ledgerSession').value;
+  if (!s) return;
+
+  const fees  = FeeDB.getFeesByStudent(ledgerStudentId).filter(f => !session || f.session === session).sort((a, b) => {
+    const mi = m => MONTHS.indexOf(m);
+    return mi(a.month) - mi(b.month);
+  });
+  const total = fees.reduce((sum, f) => sum + (f.total || 0), 0);
+
+  const feeRows = MONTHS.map(m => {
+    const f = fees.find(f => f.month === m);
+    return f ? `
+      <tr>
+        <td>${m}</td>
+        <td>${formatCurrency(f.tuitionFee)}</td>
+        <td>${formatCurrency(f.registrationFee)}</td>
+        <td>${formatCurrency(f.examFee)}</td>
+        <td>${formatCurrency(f.miscFee)}</td>
+        <td class="text-green fw-bold">${formatCurrency(f.total)}</td>
+        <td><span class="badge badge-purple">${escHtml(f.paymentMode)}</span></td>
+        <td>${formatDate(f.paymentDate)}</td>
+        <td><span class="badge badge-success">Paid</span></td>
+        <td class="no-print"><button class="btn btn-outline btn-sm" onclick="viewReceipt('${f.id}')">🖨 Receipt</button></td>
+      </tr>` :
+      `<tr>
+        <td>${m}</td>
+        <td colspan="7" class="text-muted">—</td>
+        <td><span class="badge badge-warning">Pending</span></td>
+        <td class="no-print"></td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('ledgerContent').innerHTML = `
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+      <div>
+        <div style="font-size:18px;font-weight:700;">${escHtml(s.name)}</div>
+        <div style="font-size:13px;color:#666;">${escHtml(s.class)} – Sec ${escHtml(s.section||'—')} | Roll: ${s.rollNo||'—'} | Father: ${escHtml(s.fatherName||'—')}</div>
+      </div>
+      <div class="alert alert-success" style="margin:0;flex:1;min-width:200px;">
+        Total Paid (${session}): <strong>${formatCurrency(total)}</strong> &nbsp;|&nbsp; Receipts: <strong>${fees.length}</strong>
+      </div>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Month</th><th>Tuition</th><th>Reg.</th><th>Exam</th><th>Misc</th>
+            <th>Total</th><th>Mode</th><th>Date</th><th>Status</th><th class="no-print">Action</th>
+          </tr>
+        </thead>
+        <tbody>${feeRows}</tbody>
+        <tfoot>
+          <tr style="background:#f5f7fa;font-weight:700;">
+            <td>TOTAL</td>
+            <td colspan="4"></td>
+            <td class="text-green">${formatCurrency(total)}</td>
+            <td colspan="4"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Students – Fee Management System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-container">
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <div class="page-title">👥 Students</div>
+      <div class="top-bar-right">
+        <span class="session-badge" id="sessionBadge"></span>
+        <button class="btn btn-primary btn-sm" onclick="openAddStudent()">+ Add Student</button>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div class="section-card">
+        <div class="section-header">
+          <h3>Student List</h3>
+          <div id="studentCount" style="font-size:13px;color:#666;"></div>
+        </div>
+        <div class="section-body">
+          <!-- Filters -->
+          <div class="filter-bar">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="searchInput" placeholder="Search by name, father name, serial no, phone…" oninput="applyFilters()">
+            </div>
+            <select id="classFilter" class="filter-select" onchange="applyFilters()">
+              <option value="all">All Classes</option>
+            </select>
+            <select id="sectionFilter" class="filter-select" onchange="applyFilters()">
+              <option value="all">All Sections</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="exportStudents()">⬇ Export CSV</button>
+          </div>
+
+          <!-- Table -->
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>S.No</th>
+                  <th>Student Name</th>
+                  <th>Father's Name</th>
+                  <th>Class</th>
+                  <th>Sec</th>
+                  <th>Roll</th>
+                  <th>Phone</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="studentsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADD / EDIT STUDENT MODAL ===== -->
+<div class="modal-overlay" id="studentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Add New Student</h3>
+      <button class="modal-close" onclick="closeModal('studentModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editStudentId">
+
+      <div class="form-section-title">Personal Information</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Student Name <span style="color:red">*</span></label>
+          <input type="text" id="s_name" placeholder="Full name">
+        </div>
+        <div class="form-group">
+          <label>Father's Name <span style="color:red">*</span></label>
+          <input type="text" id="s_fatherName" placeholder="Father's full name">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="s_phone" placeholder="10-digit mobile number">
+        </div>
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" id="s_address" placeholder="Village / Town">
+        </div>
+      </div>
+
+      <div class="form-section-title">Academic Details</div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>Class <span style="color:red">*</span></label>
+          <select id="s_class">
+            <option value="">Select Class</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Section</label>
+          <select id="s_section">
+            <option value="">Select Section</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Roll Number</label>
+          <input type="number" id="s_rollNo" placeholder="Roll No" min="1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Admission Date</label>
+        <input type="date" id="s_admissionDate">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('studentModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStudent()">💾 Save Student</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VIEW STUDENT MODAL ===== -->
+<div class="modal-overlay" id="viewStudentModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3>Student Details</h3>
+      <button class="modal-close" onclick="closeModal('viewStudentModal')">&times;</button>
+    </div>
+    <div class="modal-body" id="viewStudentBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('viewStudentModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+renderSidebar('students');
+
+// Populate filters
+CLASSES.forEach(c => {
+  document.getElementById('classFilter').innerHTML += `<option value="${escHtml(c)}">${escHtml(c)}</option>`;
+  document.getElementById('s_class').innerHTML += `<option value="${escHtml(c)}">${escHtml(c)}</option>`;
+});
+SECTIONS.forEach(s => {
+  document.getElementById('sectionFilter').innerHTML += `<option value="${escHtml(s)}">${escHtml(s)}</option>`;
+  document.getElementById('s_section').innerHTML += `<option value="${escHtml(s)}">${escHtml(s)}</option>`;
+});
+
+renderStudents();
+
+function applyFilters() {
+  const q   = document.getElementById('searchInput').value.trim();
+  const cls = document.getElementById('classFilter').value;
+  const sec = document.getElementById('sectionFilter').value;
+
+  let list = q ? FeeDB.searchStudents(q) : FeeDB.getStudents();
+  if (cls !== 'all') list = list.filter(s => s.class === cls);
+  if (sec !== 'all') list = list.filter(s => s.section === sec);
+  renderTable(list);
+}
+
+function renderStudents() {
+  renderTable(FeeDB.getStudents());
+}
+
+function renderTable(list) {
+  const tbody = document.getElementById('studentsBody');
+  document.getElementById('studentCount').textContent = `${list.length} student(s)`;
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">No students found</div><div class="empty-desc">Try a different search or add a new student.</div></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(s => `
+    <tr>
+      <td>${s.serialNo}</td>
+      <td><strong>${escHtml(s.name)}</strong></td>
+      <td>${escHtml(s.fatherName || '—')}</td>
+      <td>${escHtml(s.class)}</td>
+      <td>${escHtml(s.section || '—')}</td>
+      <td>${s.rollNo || '—'}</td>
+      <td>${escHtml(s.phone || '—')}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn btn-outline btn-sm" onclick="viewStudent('${s.id}')">👁 View</button>
+          <button class="btn btn-warning btn-sm" onclick="editStudent('${s.id}')">✏️ Edit</button>
+          ${isAdmin() ? `<button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.id}')">🗑</button>` : ''}
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openAddStudent() {
+  clearForm();
+  document.getElementById('modalTitle').textContent = 'Add New Student';
+  document.getElementById('editStudentId').value = '';
+  document.getElementById('s_admissionDate').value = todayISO();
+  openModal('studentModal');
+}
+
+function editStudent(id) {
+  const s = FeeDB.getStudentById(id);
+  if (!s) return;
+  clearForm();
+  document.getElementById('modalTitle').textContent = 'Edit Student';
+  document.getElementById('editStudentId').value = id;
+  document.getElementById('s_name').value = s.name || '';
+  document.getElementById('s_fatherName').value = s.fatherName || '';
+  document.getElementById('s_phone').value = s.phone || '';
+  document.getElementById('s_address').value = s.address || '';
+  document.getElementById('s_class').value = s.class || '';
+  document.getElementById('s_section').value = s.section || '';
+  document.getElementById('s_rollNo').value = s.rollNo || '';
+  document.getElementById('s_admissionDate').value = s.admissionDate || '';
+  openModal('studentModal');
+}
+
+function clearForm() {
+  ['s_name','s_fatherName','s_phone','s_address','s_rollNo','s_admissionDate'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('s_class').value = '';
+  document.getElementById('s_section').value = '';
+}
+
+function saveStudent() {
+  const name = document.getElementById('s_name').value.trim();
+  const father = document.getElementById('s_fatherName').value.trim();
+  const cls  = document.getElementById('s_class').value;
+
+  if (!name) { showToast('Student name is required', 'error'); return; }
+  if (!father) { showToast("Father's name is required", 'error'); return; }
+  if (!cls) { showToast('Please select a class', 'error'); return; }
+
+  const data = {
+    name, fatherName: father,
+    phone: document.getElementById('s_phone').value.trim(),
+    address: document.getElementById('s_address').value.trim(),
+    class: cls,
+    section: document.getElementById('s_section').value,
+    rollNo: document.getElementById('s_rollNo').value || '',
+    admissionDate: document.getElementById('s_admissionDate').value
+  };
+
+  const editId = document.getElementById('editStudentId').value;
+  if (editId) {
+    FeeDB.updateStudent(editId, data);
+    showToast('Student updated successfully', 'success');
+  } else {
+    FeeDB.addStudent(data);
+    showToast('Student added successfully', 'success');
+  }
+
+  closeModal('studentModal');
+  applyFilters();
+}
+
+function deleteStudent(id) {
+  const s = FeeDB.getStudentById(id);
+  if (!s) return;
+  if (!confirm(`Delete student "${s.name}"?\nThis will also delete all their fee records.`)) return;
+  FeeDB.deleteStudent(id);
+  showToast('Student deleted', 'info');
+  applyFilters();
+}
+
+function viewStudent(id) {
+  const s = FeeDB.getStudentById(id);
+  if (!s) return;
+  const fees = FeeDB.getFeesByStudent(id);
+  const totalPaid = fees.reduce((sum, f) => sum + (f.total || 0), 0);
+
+  const feeRows = fees.length ? fees.slice(-5).reverse().map(f => `
+    <tr>
+      <td><span class="badge badge-info">${escHtml(f.receiptNo)}</span></td>
+      <td>${escHtml(f.session)} – ${escHtml(f.month)}</td>
+      <td class="text-green">${formatCurrency(f.total)}</td>
+      <td>${escHtml(f.paymentMode)}</td>
+      <td>${formatDate(f.paymentDate)}</td>
+    </tr>
+  `).join('') : `<tr><td colspan="5" class="text-center text-muted" style="padding:16px;">No fee records</td></tr>`;
+
+  document.getElementById('viewStudentBody').innerHTML = `
+    <div class="form-row" style="margin-bottom:16px;">
+      <div><div class="r-label">Student Name</div><div class="r-value" style="font-size:17px;">${escHtml(s.name)}</div></div>
+      <div><div class="r-label">Serial No</div><div class="r-value">${s.serialNo}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px 20px;margin-bottom:20px;">
+      <div><div class="r-label">Father's Name</div><div class="r-value">${escHtml(s.fatherName || '—')}</div></div>
+      <div><div class="r-label">Class / Section</div><div class="r-value">${escHtml(s.class)} – ${escHtml(s.section || '—')}</div></div>
+      <div><div class="r-label">Roll No</div><div class="r-value">${s.rollNo || '—'}</div></div>
+      <div><div class="r-label">Phone</div><div class="r-value">${escHtml(s.phone || '—')}</div></div>
+      <div><div class="r-label">Address</div><div class="r-value">${escHtml(s.address || '—')}</div></div>
+      <div><div class="r-label">Admission Date</div><div class="r-value">${formatDate(s.admissionDate)}</div></div>
+    </div>
+    <div class="alert alert-info">💰 Total Fees Paid: <strong>${formatCurrency(totalPaid)}</strong> &nbsp;|&nbsp; Receipts: <strong>${fees.length}</strong></div>
+    <div class="form-section-title">Recent Fee Payments</div>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Receipt</th><th>Session – Month</th><th>Amount</th><th>Mode</th><th>Date</th></tr></thead>
+        <tbody>${feeRows}</tbody>
+      </table>
+    </div>
+  `;
+  openModal('viewStudentModal');
+}
+
+function exportStudents() {
+  const list = FeeDB.getStudents();
+  const headers = ['Serial No', 'Name', "Father's Name", 'Class', 'Section', 'Roll No', 'Phone', 'Address', 'Admission Date'];
+  const rows = [headers, ...list.map(s => [s.serialNo, s.name, s.fatherName, s.class, s.section, s.rollNo, s.phone, s.address, s.admissionDate])];
+  exportToCSV(rows, 'students_' + new Date().toISOString().split('T')[0] + '.csv');
+  showToast('Students exported to CSV', 'success');
+}
+</script>
+</body>
+</html>

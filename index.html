@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – School Fee Management System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="school-icon">🏫</div>
+        <h1>School Fee Management</h1>
+        <p>Primary School &bull; Academic Year 2026-27</p>
+      </div>
+
+      <form id="loginForm" autocomplete="on">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="Enter your username" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" required>
+        </div>
+        <div class="error-msg" id="loginError">❌ Invalid username or password. Please try again.</div>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:10px; padding:13px;">
+          🔐 &nbsp;Sign In
+        </button>
+      </form>
+
+      <div style="margin-top:24px; padding:14px 16px; background:#F5F7FA; border-radius:8px; font-size:12.5px; color:#666; border:1px solid #E0E0E0;">
+        <strong style="display:block;margin-bottom:6px;color:#333;">Demo Credentials:</strong>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;">
+          <div>👤 Admin: <code>admin</code> / <code>admin123</code></div>
+          <div>📚 Teacher: <code>teacher</code> / <code>teacher123</code></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+    FeeDB.seedData();
+
+    // Already logged in? Redirect
+    if (sessionStorage.getItem('fms_user')) {
+      window.location.href = 'dashboard.html';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const errEl    = document.getElementById('loginError');
+
+      const user = FeeDB.authenticate(username, password);
+      if (user) {
+        sessionStorage.setItem('fms_user', JSON.stringify(user));
+        window.location.href = 'dashboard.html';
+      } else {
+        errEl.style.display = 'flex';
+        document.getElementById('password').value = '';
+        document.getElementById('password').focus();
+      }
+    });
+
+    // Hide error on input
+    ['username','password'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => {
+        document.getElementById('loginError').style.display = 'none';
+      });
+    });
+  </script>
+</body>
+</html>
