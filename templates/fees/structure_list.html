@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load fees_tags %}
+{% block title %}Fee Structure{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h3 class="fw-bold mb-0"><i class="bi bi-sliders me-2"></i>Fee Structure</h3>
+  <form method="get" class="d-flex gap-2 align-items-center">
+    <select name="year_id" class="form-select" onchange="this.form.submit()">
+      {% for y in all_years %}<option value="{{ y.pk }}" {% if y == year %}selected{% endif %}>{{ y.name }}</option>{% endfor %}
+    </select>
+  </form>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Class</th><th>Tuition Fee</th><th>Dearness Fee</th><th>Miscellaneous</th><th>Annual Compulsory</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for c in classes %}
+        {% with s=structures|get_item:c.pk %}
+        <tr>
+          <td class="fw-semibold fs-5">{{ c.name }}</td>
+          <td>{% if s %}₹{{ s.tuition_fee }}{% else %}<span class="text-muted">Not set</span>{% endif %}</td>
+          <td>{% if s %}₹{{ s.dearness_fee }}{% else %}<span class="text-muted">Not set</span>{% endif %}</td>
+          <td>{% if s %}₹{{ s.miscellaneous_fee }}{% else %}<span class="text-muted">Not set</span>{% endif %}</td>
+          <td>{% if s %}₹{{ s.annual_compulsory }}{% else %}<span class="text-muted">Not set</span>{% endif %}</td>
+          <td><a href="{% url 'fees:structure_edit' year.pk c.pk %}" class="btn btn-outline-primary btn-sm">{% if s %}Edit{% else %}Set{% endif %}</a></td>
+        </tr>
+        {% endwith %}
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No classes found. <a href="{% url 'students:class_add' %}">Add a class</a> first.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

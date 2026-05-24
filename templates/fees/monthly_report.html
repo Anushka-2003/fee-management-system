@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Monthly Report{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h3 class="fw-bold mb-0"><i class="bi bi-table me-2"></i>Monthly Collection Report</h3>
+  <button class="btn btn-outline-secondary btn-lg no-print" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print</button>
+</div>
+
+<div class="card mb-3 no-print">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label fw-semibold">Academic Year</label>
+        <select name="year_id" class="form-select form-select-lg">
+          {% for y in all_years %}<option value="{{ y.pk }}" {% if y == year %}selected{% endif %}>{{ y.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label fw-semibold">Month</label>
+        <select name="month" class="form-select form-select-lg">
+          {% for num, name in months %}<option value="{{ num }}" {% if num == month %}selected{% endif %}>{{ name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-primary btn-lg w-100"><i class="bi bi-search me-1"></i>Generate</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-white d-flex justify-content-between">
+    <span>{{ records|length }} payments &mdash; {{ year.name }}</span>
+    <strong class="text-success">Total: ₹{{ total|floatformat:2 }}</strong>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Receipt</th><th>Student</th><th>Class</th>
+          <th>Tuition</th><th>Dearness</th><th>Misc</th><th>Annual</th><th>Reg</th><th>Adm</th>
+          <th>Total</th><th>Mode</th><th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td class="font-monospace small"><a href="{% url 'fees:receipt_html' r.pk %}">{{ r.receipt_number }}</a></td>
+          <td class="fw-semibold">{{ r.student.name }}</td>
+          <td>{{ r.student.school_class }}</td>
+          <td>{{ r.tuition_fee }}</td>
+          <td>{{ r.dearness_fee }}</td>
+          <td>{{ r.miscellaneous_dues }}</td>
+          <td>{{ r.annual_compulsory }}</td>
+          <td>{{ r.registration_fee }}</td>
+          <td>{{ r.admission_fee }}</td>
+          <td class="fw-bold text-success">₹{{ r.total_paid }}</td>
+          <td><span class="badge bg-secondary">{{ r.get_payment_mode_display }}</span></td>
+          <td>{{ r.collection_date|date:"d M" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="12" class="text-center text-muted py-5">No records found.</td></tr>
+        {% endfor %}
+      </tbody>
+      {% if records %}
+      <tfoot class="table-secondary fw-bold">
+        <tr>
+          <td colspan="3">Totals</td>
+          <td>₹{{ total_tuition|floatformat:0 }}</td>
+          <td>₹{{ total_dearness|floatformat:0 }}</td>
+          <td>₹{{ total_misc|floatformat:0 }}</td>
+          <td>₹{{ total_annual|floatformat:0 }}</td>
+          <td>₹{{ total_registration|floatformat:0 }}</td>
+          <td>₹{{ total_admission|floatformat:0 }}</td>
+          <td class="text-success">₹{{ total|floatformat:2 }}</td>
+          <td colspan="2"></td>
+        </tr>
+      </tfoot>
+      {% endif %}
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Students{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="fw-bold mb-0"><i class="bi bi-people me-2"></i>Students — {{ year.name }}</h3>
+  <a href="{% url 'students:add' %}" class="btn btn-primary btn-lg"><i class="bi bi-person-plus me-1"></i>Add Student</a>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-5">
+        <label class="form-label fw-semibold">Search by Name</label>
+        <input type="text" name="q" value="{{ q }}" class="form-control form-control-lg" placeholder="Student name...">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label fw-semibold">Filter by Class</label>
+        <select name="class_id" class="form-select form-select-lg">
+          <option value="">All Classes</option>
+          {% for c in classes %}<option value="{{ c.pk }}" {% if selected_class == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-primary btn-lg w-100"><i class="bi bi-search me-1"></i>Search</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>#</th><th>Name</th><th>Class</th><th>Type</th><th>Father</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td class="text-muted">{{ s.serial_number }}</td>
+          <td class="fw-semibold fs-5">{{ s.name }}</td>
+          <td>{{ s.school_class }}</td>
+          <td>{% if s.is_new %}<span class="badge bg-success">New</span>{% else %}<span class="badge bg-secondary">Re-Enrolment</span>{% endif %}</td>
+          <td>{{ s.father_name }}</td>
+          <td class="d-flex gap-1">
+            <a href="{% url 'students:detail' s.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+            <a href="{% url 'fees:fee_entry' s.pk %}" class="btn btn-sm btn-primary">Record Fee</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted py-5 fs-5">No students found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

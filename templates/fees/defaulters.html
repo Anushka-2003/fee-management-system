@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Defaulters{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h3 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Fee Defaulters</h3>
+  <span class="badge bg-danger fs-5">{{ defaulters|length }} not paid</span>
+</div>
+
+<div class="card mb-3 no-print">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label fw-semibold">Month</label>
+        <select name="month" class="form-select form-select-lg">
+          {% for num, name in months %}
+          <option value="{{ num }}" {% if num == month %}selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label fw-semibold">Class</label>
+        <select name="class_id" class="form-select form-select-lg">
+          <option value="">All Classes</option>
+          {% for c in classes %}
+          <option value="{{ c.pk }}" {% if selected_class == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-danger btn-lg w-100"><i class="bi bi-search"></i> Filter</button>
+      </div>
+      <div class="col-md-2">
+        <button type="button" class="btn btn-outline-secondary btn-lg w-100" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-danger text-white">
+    Defaulters for {{ month|date }} — {{ year.name }}
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>#</th><th>Student Name</th><th>Class</th><th>Type</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for s in defaulters %}
+        <tr>
+          <td>{{ s.serial_number }}</td>
+          <td class="fw-semibold">{{ s.name }}</td>
+          <td>{{ s.school_class }}</td>
+          <td>{% if s.is_new %}<span class="badge bg-success">New</span>{% else %}<span class="badge bg-secondary">Re-Enrolment</span>{% endif %}</td>
+          <td class="no-print"><a href="{% url 'fees:fee_entry' s.pk %}" class="btn btn-sm btn-primary">Record Fee</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-success py-5 fs-5"><i class="bi bi-check-circle me-2"></i>All students have paid for this month!</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

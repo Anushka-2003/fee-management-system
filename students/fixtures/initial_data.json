@@ -1,0 +1,14 @@
+[
+  {"model": "students.schoolclass", "pk": 1, "fields": {"name": "Nursery", "order": 1}},
+  {"model": "students.schoolclass", "pk": 2, "fields": {"name": "LKG", "order": 2}},
+  {"model": "students.schoolclass", "pk": 3, "fields": {"name": "UKG", "order": 3}},
+  {"model": "students.schoolclass", "pk": 4, "fields": {"name": "Class 1", "order": 4}},
+  {"model": "students.schoolclass", "pk": 5, "fields": {"name": "Class 2", "order": 5}},
+  {"model": "students.schoolclass", "pk": 6, "fields": {"name": "Class 3", "order": 6}},
+  {"model": "students.schoolclass", "pk": 7, "fields": {"name": "Class 4", "order": 7}},
+  {"model": "students.schoolclass", "pk": 8, "fields": {"name": "Class 5", "order": 8}},
+  {"model": "students.schoolclass", "pk": 9, "fields": {"name": "Class 6", "order": 9}},
+  {"model": "students.schoolclass", "pk": 10, "fields": {"name": "Class 7", "order": 10}},
+  {"model": "students.schoolclass", "pk": 11, "fields": {"name": "Class 8", "order": 11}},
+  {"model": "students.academicyear", "pk": 3, "fields": {"name": "2026-2027", "start_date": "2026-04-01", "end_date": "2027-03-31", "is_current": true}}
+]

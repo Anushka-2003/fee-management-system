@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load fees_tags %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h3 class="fw-bold mb-0"><i class="bi bi-speedometer2 me-2"></i>Dashboard &mdash; {{ year.name }}</h3>
+  <form class="d-flex align-items-center gap-2">
+    <label class="fw-semibold mb-0">Month:</label>
+    <select name="month" class="form-select" onchange="this.form.submit()">
+      {% for num, name in months %}
+      <option value="{{ num }}" {% if num == month %}selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card bg-primary text-white">
+      <div class="stat-value">{{ total_students }}</div>
+      <div class="stat-label">Total Students</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card bg-success text-white">
+      <div class="stat-value">{{ paid_count }}</div>
+      <div class="stat-label">Paid This Month</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card bg-danger text-white">
+      <div class="stat-value">{{ pending_count }}</div>
+      <div class="stat-label">Pending Payment</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card bg-info text-white">
+      <div class="stat-value">₹{{ total_month|floatformat:0 }}</div>
+      <div class="stat-label">Collected This Month</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header bg-white">
+        <i class="bi bi-clock-history me-2"></i>Today's Collections
+        <span class="badge bg-secondary ms-2">{{ today_collections|length }}</span>
+        <strong class="float-end text-success">₹{{ total_today|floatformat:0 }}</strong>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Receipt</th><th>Student</th><th>Class</th><th>Amount</th><th>Mode</th><th></th></tr></thead>
+          <tbody>
+            {% for r in today_collections %}
+            <tr>
+              <td class="font-monospace small">{{ r.receipt_number }}</td>
+              <td class="fw-semibold">{{ r.student.name }}</td>
+              <td>{{ r.student.school_class }}</td>
+              <td class="text-success fw-bold">₹{{ r.total_paid }}</td>
+              <td><span class="badge bg-secondary">{{ r.get_payment_mode_display }}</span></td>
+              <td><a href="{% url 'fees:receipt_html' r.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-receipt"></i></a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center text-muted py-4">No collections recorded today.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-header bg-white"><i class="bi bi-lightning-charge me-2"></i>Quick Actions</div>
+      <div class="card-body d-grid gap-3">
+        <a href="{% url 'fees:fee_entry_select' %}" class="btn btn-primary btn-lg">
+          <i class="bi bi-cash-coin me-2"></i>Record a Fee
+        </a>
+        <a href="{% url 'fees:defaulters' %}" class="btn btn-outline-danger btn-lg">
+          <i class="bi bi-exclamation-triangle me-2"></i>View Defaulters
+        </a>
+        <a href="{% url 'fees:monthly_report' %}" class="btn btn-outline-secondary btn-lg">
+          <i class="bi bi-table me-2"></i>Monthly Report
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
