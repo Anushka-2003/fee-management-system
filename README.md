@@ -14,7 +14,12 @@ To run on your system:
    venv\Scripts\activate
    pip install -r requirements.txt
    ```
-
+   Then run:
+   ```
+   python manage.py migrate
+   python manage.py runserver
+   ```
+   
 That's it — no other changes needed. The database (all students, fees, users) travels with the db.sqlite3 file inside the folder.
 
 **Easiest way to transfer:** Copy the folder via USB drive or shared network folder — but **exclude the venv folder** (it's large and must be recreated on the new machine anyway). Everything else must be copied.
