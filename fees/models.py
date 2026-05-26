@@ -36,6 +36,15 @@ class FeeRecord(models.Model):
         (PAYMENT_BANK, 'Bank Transfer'),
     ]
 
+    RECEIVER_SANGEETA = 'sangeeta'
+    RECEIVER_NEELAM = 'neelam'
+    RECEIVER_OTHER = 'other'
+    RECEIVER_CHOICES = [
+        (RECEIVER_SANGEETA, 'Mrs. Sangeeta Sahu (Treasurer, SMWS)'),
+        (RECEIVER_NEELAM, 'Mrs. Neelam Gupta (Sr. Teacher)'),
+        (RECEIVER_OTHER, 'Other'),
+    ]
+
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='fee_records')
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.PROTECT, related_name='fee_records')
     month = models.PositiveSmallIntegerField(choices=MONTH_CHOICES)
@@ -52,6 +61,8 @@ class FeeRecord(models.Model):
     payment_mode = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default=PAYMENT_CASH)
     cheque_number = models.CharField(max_length=30, blank=True, default='')
     collected_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='collected_fees')
+    received_by = models.CharField(max_length=20, choices=RECEIVER_CHOICES, default=RECEIVER_SANGEETA)
+    received_by_other = models.CharField(max_length=100, blank=True, default='')
     receipt_number = models.CharField(max_length=30, unique=True, editable=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -62,6 +73,12 @@ class FeeRecord(models.Model):
 
     def __str__(self):
         return f"{self.receipt_number} | {self.student.name} | {self.get_month_display()}"
+
+    @property
+    def receiver_name(self):
+        if self.received_by == self.RECEIVER_OTHER:
+            return self.received_by_other or 'Other'
+        return self.get_received_by_display()
 
     def save(self, *args, **kwargs):
         if not self.receipt_number:
