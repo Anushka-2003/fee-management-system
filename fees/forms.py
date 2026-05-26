@@ -22,6 +22,7 @@ class FeeRecordForm(forms.ModelForm):
             'month', 'tuition_fee', 'dearness_fee', 'registration_fee',
             'miscellaneous_dues', 'admission_fee', 'annual_compulsory',
             'total_paid', 'collection_date', 'payment_mode', 'cheque_number',
+            'received_by', 'received_by_other',
         ]
         widgets = {
             'month': forms.Select(attrs={'class': 'form-select form-select-lg'}),
@@ -35,6 +36,8 @@ class FeeRecordForm(forms.ModelForm):
             'collection_date': forms.DateInput(attrs={'class': 'form-control form-control-lg', 'type': 'date'}),
             'payment_mode': forms.Select(attrs={'class': 'form-select form-select-lg', 'id': 'id_payment_mode'}),
             'cheque_number': forms.TextInput(attrs={'class': 'form-control form-control-lg', 'placeholder': 'Cheque number'}),
+            'received_by': forms.Select(attrs={'class': 'form-select form-select-lg', 'id': 'id_received_by'}),
+            'received_by_other': forms.TextInput(attrs={'class': 'form-control form-control-lg', 'placeholder': 'Enter receiver name'}),
         }
 
     def clean(self):
@@ -43,4 +46,7 @@ class FeeRecordForm(forms.ModelForm):
         cheque = cleaned.get('cheque_number', '').strip()
         if mode == FeeRecord.PAYMENT_CHEQUE and not cheque:
             self.add_error('cheque_number', 'Cheque number is required when payment mode is Cheque.')
+        if cleaned.get('received_by') == FeeRecord.RECEIVER_OTHER:
+            if not cleaned.get('received_by_other', '').strip():
+                self.add_error('received_by_other', 'Please enter the receiver\'s name.')
         return cleaned
