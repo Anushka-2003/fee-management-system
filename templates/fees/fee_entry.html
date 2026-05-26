@@ -1,37 +1,54 @@
 {% extends "base.html" %}
 {% block title %}Record Fee — {{ student.name }}{% endblock %}
 {% block content %}
-<div class="d-flex align-items-center mb-4 gap-3">
-  <a href="{% url 'fees:fee_entry_select' %}" class="btn btn-outline-secondary btn-lg no-print"><i class="bi bi-arrow-left"></i></a>
-  <div>
-    <h3 class="fw-bold mb-0">Record Fee Payment</h3>
-    <span class="text-muted fs-5">
+
+<!-- Page header -->
+<div class="page-header d-flex align-items-center gap-3 no-print">
+  <a href="{% url 'fees:fee_entry_select' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+  <div class="flex-grow-1">
+    <h3 class="mb-0">Record Fee Payment</h3>
+    <div class="sub">
       <strong>{{ student.name }}</strong> &bull; {{ student.school_class }} &bull;
       {% if is_new_student %}<span class="badge bg-success">New Student</span>{% else %}<span class="badge bg-secondary">Re-Enrolment</span>{% endif %}
-    </span>
+      &bull; <span class="year-badge">{{ year.name }}</span>
+    </div>
   </div>
 </div>
 
 <div class="row g-4">
-  <div class="col-lg-7">
-    <div class="card">
-      <div class="card-header bg-primary text-white">Fee Details for {{ year.name }}</div>
-      <div class="card-body p-4">
-        <form method="post" id="feeForm">
-          {% csrf_token %}
+
+  <!-- LEFT: Fee entry form -->
+  <div class="col-xl-7 col-lg-8">
+    <form method="post" id="feeForm">
+      {% csrf_token %}
+
+      <!-- Section 1: Month & Date -->
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
+          <i class="bi bi-calendar-event"></i> Payment Period
+        </div>
+        <div class="card-body p-4">
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Month <span class="text-danger">*</span></label>
               {{ form.month }}
-              {% if form.month.errors %}<div class="text-danger small">{{ form.month.errors.0 }}</div>{% endif %}
+              {% if form.month.errors %}<div class="text-danger small mt-1">{{ form.month.errors.0 }}</div>{% endif %}
             </div>
             <div class="col-md-6">
               <label class="form-label">Collection Date <span class="text-danger">*</span></label>
               {{ form.collection_date }}
             </div>
+          </div>
+        </div>
+      </div>
 
-            <div class="col-12"><hr class="my-1"></div>
-
+      <!-- Section 2: Fee Breakdown -->
+      <div class="card mb-4">
+        <div class="card-header bg-white d-flex align-items-center gap-2" style="color:#2d6099;">
+          <i class="bi bi-cash-stack"></i> Fee Breakdown
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Tuition Fee (₹)</label>
               {{ form.tuition_fee }}
@@ -43,15 +60,14 @@
 
             {% if is_first_payment %}
             <div class="col-md-6">
-              <label class="form-label text-success fw-bold"><i class="bi bi-star-fill me-1"></i>Registration Fee (₹) <small class="text-muted fw-normal">First payment only</small></label>
+              <label class="form-label" style="color:#198754;"><i class="bi bi-star-fill me-1"></i>Registration Fee (₹) <small class="text-muted fw-normal">First payment only</small></label>
               {{ form.registration_fee }}
             </div>
             <div class="col-md-6">
-              <label class="form-label text-success fw-bold"><i class="bi bi-star-fill me-1"></i>Admission Fee (₹) <small class="text-muted fw-normal">First payment only</small></label>
+              <label class="form-label" style="color:#198754;"><i class="bi bi-star-fill me-1"></i>Admission Fee (₹) <small class="text-muted fw-normal">First payment only</small></label>
               {{ form.admission_fee }}
             </div>
             {% else %}
-            {# Hidden fields with zero value — not applicable for this payment #}
             <input type="hidden" name="registration_fee" value="0">
             <input type="hidden" name="admission_fee" value="0">
             {% endif %}
@@ -65,48 +81,89 @@
             <input type="hidden" name="annual_compulsory" value="0">
             <div class="col-md-6">
               <label class="form-label text-muted">Annual Compulsory (₹)</label>
-              <input type="text" class="form-control form-control-lg" value="Already paid this session" disabled>
+              <input type="text" class="form-control" value="Already paid this session" disabled>
             </div>
             {% else %}
             <div class="col-md-6">
-              <label class="form-label text-warning fw-bold"><i class="bi bi-calendar-check me-1"></i>Annual Compulsory (₹) <small class="text-muted fw-normal">First payment only</small></label>
+              <label class="form-label" style="color:#b45309;"><i class="bi bi-calendar-check me-1"></i>Annual Compulsory (₹) <small class="text-muted fw-normal">First payment only</small></label>
               {{ form.annual_compulsory }}
             </div>
             {% endif %}
+          </div>
+        </div>
+      </div>
 
-            <div class="col-12"><hr class="my-1"></div>
-
-            <div class="col-md-6">
+      <!-- Section 3: Payment -->
+      <div class="card mb-4">
+        <div class="card-header bg-white d-flex align-items-center gap-2" style="color:#2d6099;">
+          <i class="bi bi-credit-card"></i> Payment Details
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-5">
               <label class="form-label fw-bold fs-5">Total Amount (₹)</label>
               {{ form.total_paid }}
-              <div class="form-text">Auto-calculated — do not edit</div>
+              <div class="form-text">Auto-calculated</div>
             </div>
-
-            <div class="col-md-6">
+            <div class="col-md-4">
               <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
               {{ form.payment_mode }}
             </div>
-
-            <div class="col-md-6" id="cheque-row" style="display:none">
-              <label class="form-label">Cheque Number <span class="text-danger">*</span></label>
+            <div class="col-md-3" id="cheque-row" style="display:none">
+              <label class="form-label">Cheque No. <span class="text-danger">*</span></label>
               {{ form.cheque_number }}
-              {% if form.cheque_number.errors %}<div class="text-danger small">{{ form.cheque_number.errors.0 }}</div>{% endif %}
+              {% if form.cheque_number.errors %}<div class="text-danger small mt-1">{{ form.cheque_number.errors.0 }}</div>{% endif %}
             </div>
           </div>
-
-          <div class="d-grid mt-4">
-            <button type="button" class="btn btn-primary btn-lg" onclick="confirmSubmit()">
-              <i class="bi bi-check-circle me-2"></i>Confirm & Save Payment
-            </button>
+          <div class="row g-3 mt-1">
+            <div class="col-md-6">
+              <label class="form-label">Received By <span class="text-danger">*</span></label>
+              {{ form.received_by }}
+            </div>
+            <div class="col-md-6" id="receiver-other-row" style="display:none">
+              <label class="form-label">Receiver Name <span class="text-danger">*</span></label>
+              {{ form.received_by_other }}
+              {% if form.received_by_other.errors %}<div class="text-danger small mt-1">{{ form.received_by_other.errors.0 }}</div>{% endif %}
+            </div>
           </div>
-        </form>
+        </div>
       </div>
-    </div>
+
+      <!-- Action -->
+      <div class="d-flex gap-2 justify-content-end mb-4">
+        <a href="{% url 'fees:fee_entry_select' %}" class="btn btn-outline-secondary btn-lg px-4">Cancel</a>
+        <button type="button" class="btn btn-primary btn-lg px-5" onclick="confirmSubmit()">
+          <i class="bi bi-check2-circle me-2"></i>Confirm &amp; Save Payment
+        </button>
+      </div>
+
+    </form>
   </div>
 
-  <div class="col-lg-5">
+  <!-- RIGHT: Student info + history -->
+  <div class="col-xl-5 col-lg-4">
+
+    <!-- Student summary card -->
+    <div class="card mb-4">
+      <div class="card-header bg-white d-flex align-items-center gap-2" style="color:#2d6099;">
+        <i class="bi bi-person-lines-fill"></i> Student Details
+      </div>
+      <div class="card-body p-3">
+        <table class="table table-sm mb-0">
+          <tr><th style="width:40%">Serial No.</th><td>{{ student.serial_number }}</td></tr>
+          <tr><th>Gender</th><td>{{ student.get_gender_display }}</td></tr>
+          <tr><th>Father</th><td>{{ student.father_name }}</td></tr>
+          <tr><th>Mother</th><td>{{ student.mother_name }}</td></tr>
+          <tr><th>Admitted</th><td>{{ student.date_of_admission }}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Payment history -->
     <div class="card">
-      <div class="card-header bg-white"><i class="bi bi-clock-history me-2"></i>Previous Payments ({{ year.name }})</div>
+      <div class="card-header bg-white d-flex align-items-center gap-2" style="color:#2d6099;">
+        <i class="bi bi-clock-history"></i> Previous Payments — {{ year.name }}
+      </div>
       <div class="table-responsive">
         <table class="table table-sm mb-0">
           <thead><tr><th>Month</th><th>Amount</th><th>Mode</th><th></th></tr></thead>
@@ -115,28 +172,17 @@
             <tr>
               <td>{{ r.get_month_display }}</td>
               <td class="text-success fw-bold">₹{{ r.total_paid }}</td>
-              <td><span class="badge bg-secondary small">{{ r.get_payment_mode_display }}</span></td>
-              <td><a href="{% url 'fees:receipt_html' r.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-receipt"></i></a></td>
+              <td><span class="badge bg-light text-dark border">{{ r.get_payment_mode_display }}</span></td>
+              <td><a href="{% url 'fees:receipt_html' r.pk %}" class="btn btn-sm btn-outline-primary py-0"><i class="bi bi-receipt"></i></a></td>
             </tr>
             {% empty %}
-            <tr><td colspan="4" class="text-muted text-center py-3">No payments yet this year.</td></tr>
+            <tr><td colspan="4" class="text-muted text-center py-3 small">No payments yet this session.</td></tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
     </div>
 
-    <div class="card mt-3">
-      <div class="card-header bg-white"><i class="bi bi-person-lines-fill me-2"></i>Student Info</div>
-      <div class="card-body">
-        <table class="table table-sm mb-0">
-          <tr><th>Serial No.</th><td>{{ student.serial_number }}</td></tr>
-          <tr><th>Father</th><td>{{ student.father_name }}</td></tr>
-          <tr><th>Mother</th><td>{{ student.mother_name }}</td></tr>
-          <tr><th>Admitted</th><td>{{ student.date_of_admission }}</td></tr>
-        </table>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -145,28 +191,28 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title"><i class="bi bi-check-circle me-2"></i>Confirm Payment</h5>
+        <h5 class="modal-title"><i class="bi bi-check2-circle me-2"></i>Confirm Payment</h5>
       </div>
-      <div class="modal-body fs-5">
-        <p>You are recording a payment for:</p>
-        <p class="fw-bold">{{ student.name }}</p>
-        <p>Total Amount: <strong class="text-success" id="confirm-amount"></strong></p>
-        <p class="text-muted">Are you sure?</p>
+      <div class="modal-body">
+        <p class="mb-1 text-muted">Recording fee for:</p>
+        <p class="fw-bold fs-5 mb-1">{{ student.name }}</p>
+        <p class="mb-1 text-muted">Total amount:</p>
+        <p class="fw-bold fs-3 text-success" id="confirm-amount"></p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary btn-lg" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary btn-lg" onclick="document.getElementById('feeForm').submit()">
-          Yes, Save Payment
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Go Back</button>
+        <button type="button" class="btn btn-primary px-4" onclick="document.getElementById('feeForm').submit()">
+          <i class="bi bi-check2 me-1"></i> Yes, Save
         </button>
       </div>
     </div>
   </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  // Auto-calculate total
   const feeFields = document.querySelectorAll('.fee-field');
   const totalField = document.getElementById('id_total_paid');
 
@@ -178,7 +224,6 @@
   feeFields.forEach(f => f.addEventListener('input', recalc));
   recalc();
 
-  // Cheque number toggle
   const modeSelect = document.getElementById('id_payment_mode');
   const chequeRow = document.getElementById('cheque-row');
   function toggleCheque() {
@@ -187,7 +232,14 @@
   modeSelect.addEventListener('change', toggleCheque);
   toggleCheque();
 
-  // Confirm modal
+  const receiverSelect = document.getElementById('id_received_by');
+  const receiverOtherRow = document.getElementById('receiver-other-row');
+  function toggleReceiverOther() {
+    receiverOtherRow.style.display = receiverSelect.value === 'other' ? 'block' : 'none';
+  }
+  receiverSelect.addEventListener('change', toggleReceiverOther);
+  toggleReceiverOther();
+
   function confirmSubmit() {
     document.getElementById('confirm-amount').textContent = '₹' + totalField.value;
     new bootstrap.Modal(document.getElementById('confirmModal')).show();
