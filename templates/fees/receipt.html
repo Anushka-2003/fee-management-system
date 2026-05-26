@@ -4,32 +4,92 @@
   <meta charset="UTF-8">
   <title>Receipt — {{ record.receipt_number }}</title>
   <style>
-    @page { size: A5; margin: 1.5cm; }
+    @page { size: A4; margin: 0.5cm 0.9cm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #111; background: #fff; }
-    .header { text-align: center; border-bottom: 3px double #333; padding-bottom: 10px; margin-bottom: 12px; }
-    .header h1 { font-size: 20px; font-weight: 700; letter-spacing: 1px; }
-    .header p { font-size: 12px; color: #555; }
-    .receipt-meta { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 12px; color: #555; }
-    .student-box { background: #f5f7fa; border: 1px solid #ddd; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; }
-    .student-box table { width: 100%; border-collapse: collapse; }
-    .student-box td { padding: 3px 6px; font-size: 12px; }
-    .student-box td:first-child { font-weight: 600; width: 40%; color: #555; }
-    .fee-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
-    .fee-table th { background: #1a3c5e; color: #fff; padding: 7px 10px; text-align: left; font-size: 12px; }
-    .fee-table td { padding: 6px 10px; border-bottom: 1px solid #eee; font-size: 13px; }
-    .fee-table tr:last-child td { border-bottom: none; }
-    .fee-table .amount { text-align: right; font-family: monospace; }
-    .total-row td { font-weight: 700; font-size: 15px; background: #f0f4f8; border-top: 2px solid #333; }
-    .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; font-size: 12px; }
-    .footer .sig { text-align: center; }
-    .footer .sig-line { border-top: 1px solid #999; margin-top: 30px; width: 130px; padding-top: 4px; color: #555; }
-    .payment-badge { display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-    .no-print-bar { background: #f0f4f8; padding: 12px 20px; display: flex; gap: 10px; border-bottom: 1px solid #ddd; }
-    .no-print-bar a, .no-print-bar button { padding: 8px 18px; border-radius: 6px; font-size: 14px; cursor: pointer; text-decoration: none; border: none; }
-    .btn-pdf { background: #1a3c5e; color: #fff; }
+    body { font-family: Arial, sans-serif; font-size: 10px; color: #111; background: #fff; line-height: 1.5; }
+
+    /* ── Each receipt copy ── */
+    .receipt-copy { width: 100%; padding: 4px 2px; }
+
+    /* ── Cut line ── */
+    .cut-line {
+      text-align: center;
+      border-top: 1.2px dashed #888;
+      border-bottom: 1.2px dashed #888;
+      padding: 2px 0;
+      margin: 14px 0;
+      font-size: 8px;
+      color: #999;
+      letter-spacing: 2px;
+    }
+
+    .copy-label {
+      font-size: 8px; font-weight: 700; color: #888;
+      text-transform: uppercase; letter-spacing: 1px;
+      text-align: right; margin-bottom: 2px;
+    }
+
+    /* ── Header ── */
+    .header { text-align: center; margin-bottom: 4px; }
+    .header .school-name { font-size: 13px; font-weight: 700; letter-spacing: 0.3px; }
+    .header .school-addr { font-size: 9.5px; color: #333; margin-top: 1px; }
+    .header .receipt-title { font-size: 10px; font-weight: 700; margin-top: 3px; text-decoration: underline; }
+
+    /* ── Receipt No row ── */
+    .receipt-no-row { width: 100%; border-collapse: collapse; margin-bottom: 5px; font-size: 9px; color: #555; }
+    .receipt-no-row td:first-child { width: 100%; }
+    .receipt-no-row td:last-child { text-align: right; white-space: nowrap; padding-left: 10px; }
+
+    /* ── Student info table ── */
+    .student-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+    .student-table td { font-size: 9.5px; padding: 1px 1px; vertical-align: bottom; }
+    .sno  { width: 16px; color: #444; }
+    .lbl  { white-space: nowrap; color: #333; padding-right: 2px; }
+    .val  { font-weight: 600; padding-left: 4px; }
+    .vsep { width: 10px; }
+    .lbl2 { white-space: nowrap; color: #333; padding-right: 2px; padding-left: 6px; }
+    .val2 { font-weight: 600; padding-left: 4px; width: 80px; }
+
+    /* ── Fee section header ── */
+    .fee-header { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
+    .fee-header td { font-size: 9.5px; font-weight: 700; padding: 2px 3px;
+                     border-top: 1.5px solid #222; border-bottom: 1.5px solid #222; }
+    .fee-header .amount-hdr { text-align: right; width: 100px; }
+
+    /* ── Fee rows ── */
+    .fee-rows { width: 100%; border-collapse: collapse; }
+    .fee-rows td { font-size: 9.5px; padding: 1px 3px; }
+    .fee-rows .fd  { }
+    .fee-rows .fv  { width: 100px; text-align: right;
+                     font-family: monospace; padding-right: 2px; }
+
+    /* ── Total row ── */
+    .fee-total { width: 100%; border-collapse: collapse; margin-top: 2px; margin-bottom: 6px; }
+    .fee-total td { font-size: 10px; font-weight: 700; padding: 2px 3px;
+                    border-top: 1.5px solid #222; }
+    .fee-total .tv { width: 100px; text-align: right; font-family: monospace; }
+
+    /* ── Footer ── */
+    .footer { font-size: 9px; }
+    .footer .recv-line { margin-bottom: 1px; }
+    .footer .mode-line { color: #444; margin-bottom: 1px; }
+    .footer .sig-footer { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .footer .sig-footer .date-cell {
+      border-top: 1px solid #444; padding-top: 2px;
+      font-size: 8.5px; width: 55%;
+    }
+    .footer .sig-footer .gap-cell { width: 10%; }
+    .footer .sig-footer .sig-cell {
+      border-top: 1px solid #444; padding-top: 2px;
+      font-size: 8.5px; width: 35%; text-align: right;
+    }
+
+    /* ── Screen toolbar ── */
+    .no-print-bar { background: #f0f4f8; padding: 10px 16px; display: flex; gap: 10px; border-bottom: 1px solid #ddd; }
+    .no-print-bar a, .no-print-bar button { padding: 7px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; text-decoration: none; border: none; }
+    .btn-pdf  { background: #1a3c5e; color: #fff; }
     .btn-print { background: #2d6099; color: #fff; }
-    .btn-back { background: #eee; color: #333; }
+    .btn-back  { background: #eee; color: #333; }
     @media print { .no-print-bar { display: none; } }
   </style>
 </head>
@@ -37,59 +97,152 @@
 
 {% if not pdf_mode %}
 <div class="no-print-bar">
-  <a href="{% url 'fees:receipt_pdf' record.pk %}" class="btn-pdf">⬇ Download PDF</a>
-  <button class="btn-print" onclick="window.print()">🖨 Print</button>
-  <a href="{% url 'fees:fee_entry_select' %}" class="btn-back">← Back</a>
+  <a href="{% url 'fees:receipt_pdf' record.pk %}" class="btn-pdf">&#11015; Download PDF</a>
+  <button class="btn-print" onclick="window.print()">&#128424; Print</button>
+  <a href="{% url 'fees:fee_entry_select' %}" class="btn-back">&larr; Back</a>
 </div>
 {% endif %}
 
-<div style="padding: 20px;">
+{% for copy_label in copy_labels %}
+<div class="receipt-copy">
+
+  <div class="copy-label">{{ copy_label }}</div>
+
+  <!-- Header -->
   <div class="header">
-    <h1>Shyama Memorial Rajdhani Public School</h1>
-    <p style="font-size:13px; color:#333;">364/17, Saadatganj, Lucknow - 226003</p>
-    <p style="font-size:12px; color:#777; margin-top:4px;">Fee Payment Receipt</p>
+    <div class="school-name">Shyama Memorial Rajdhani Public School</div>
+    <div class="school-addr">364/17, Saadat Ganj, Lucknow &ndash; 226003</div>
+    <div class="receipt-title">Student Fee Receipt &nbsp; AS {{ record.academic_year.name }}</div>
   </div>
 
-  <div class="receipt-meta">
-    <span><strong>Receipt No:</strong> {{ record.receipt_number }}</span>
-    <span><strong>Date:</strong> {{ record.collection_date|date:"d M Y" }}</span>
-    <span><strong>Session:</strong> {{ record.academic_year.name }}</span>
-  </div>
+  <!-- Receipt No & Date -->
+  <table class="receipt-no-row">
+    <tr>
+      <td><strong>Receipt No:</strong> {{ record.receipt_number }}</td>
+      <td><strong>Date:</strong> {{ record.collection_date|date:"d M Y" }}</td>
+    </tr>
+  </table>
 
-  <div class="student-box">
-    <table>
-      <tr><td>Student Name</td><td><strong>{{ record.student.name }}</strong></td><td>Serial No.</td><td>{{ record.student.serial_number }}</td></tr>
-      <tr><td>Class</td><td>{{ record.student.school_class }}</td><td>Type</td><td>{{ record.student.get_enrollment_type_display }}</td></tr>
-      <tr><td>Father's Name</td><td>{{ record.student.father_name }}</td><td>Mother's Name</td><td>{{ record.student.mother_name }}</td></tr>
+  <!-- Student Info -->
+  <table class="student-table">
+    <tr>
+      <td class="sno">1.</td>
+      <td class="lbl">Name of Student :</td>
+      <td class="val">{{ record.student.name }}</td>
+      <td class="vsep"></td>
+      <td class="lbl2">Serial No.</td>
+      <td class="val2">{{ record.student.serial_number }}</td>
+    </tr>
+    <tr>
+      <td class="sno">2.</td>
+      <td class="lbl">Class in which admitted :</td>
+      <td class="val">{{ record.student.school_class }}</td>
+      <td class="vsep"></td>
+      <td class="lbl2">Installment :</td>
+      <td class="val2">{{ record.get_month_display }}</td>
+    </tr>
+    <tr>
+      <td class="sno">3.</td>
+      <td class="lbl">Re-enrolment / New :</td>
+      <td class="val" colspan="4">{{ record.student.get_enrollment_type_display }}</td>
+    </tr>
+    <tr>
+      <td class="sno">4.</td>
+      <td class="lbl">Father's Name :</td>
+      <td class="val">{{ record.student.father_name }}</td>
+      <td class="vsep"></td>
+      <td class="lbl2">Mother's Name :</td>
+      <td class="val2" style="width:auto;">{{ record.student.mother_name }}</td>
+    </tr>
+    <tr>
+      <td class="sno">5.</td>
+      <td class="lbl">Date of admission :</td>
+      <td class="val" colspan="4">{{ record.student.date_of_admission|date:"d M Y"|default:"—" }}</td>
+    </tr>
+  </table>
+
+  <!-- Fee Section Header -->
+  <table class="fee-header">
+    <tr>
+      <td>Fee Heads</td>
+      <td class="amount-hdr">Amount received in Rs.</td>
+    </tr>
+  </table>
+
+  <!-- Fee Rows -->
+  <table class="fee-rows">
+    {% if record.tuition_fee %}
+    <tr>
+      <td class="fd">Tuition Fee</td>
+      <td class="fv">{{ record.tuition_fee }}</td>
+    </tr>
+    {% endif %}
+    {% if record.dearness_fee %}
+    <tr>
+      <td class="fd">Dearness Fee</td>
+      <td class="fv">{{ record.dearness_fee }}</td>
+    </tr>
+    {% endif %}
+    {% if record.registration_fee %}
+    <tr>
+      <td class="fd">Registration Fee <em>(New)</em></td>
+      <td class="fv">{{ record.registration_fee }}</td>
+    </tr>
+    {% endif %}
+    {% if record.miscellaneous_dues %}
+    <tr>
+      <td class="fd">Other Miscellaneous Dues</td>
+      <td class="fv">{{ record.miscellaneous_dues }}</td>
+    </tr>
+    {% endif %}
+    {% if record.admission_fee %}
+    <tr>
+      <td class="fd">Admission Form Fee <em>(New)</em></td>
+      <td class="fv">{{ record.admission_fee }}</td>
+    </tr>
+    {% endif %}
+    {% if record.annual_compulsory %}
+    <tr>
+      <td class="fd">Annual Compulsory Payment</td>
+      <td class="fv">{{ record.annual_compulsory }}</td>
+    </tr>
+    {% endif %}
+  </table>
+
+  <!-- Total -->
+  <table class="fee-total">
+    <tr>
+      <td>Total amount paid</td>
+      <td class="tv">Rs. {{ record.total_paid }}</td>
+    </tr>
+  </table>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="recv-line"><strong>Received by :</strong> {{ record.receiver_name }}</div>
+    <div class="mode-line"><strong>Payment Mode :</strong> {{ record.get_payment_mode_display }}{% if record.cheque_number %} &nbsp;|&nbsp; <strong>Cheque No:</strong> {{ record.cheque_number }}{% endif %}</div>
+    <table class="sig-footer">
+      <tr>
+        <td class="date-cell">Date of fee collection : {{ record.collection_date|date:"d M Y" }}</td>
+        <td class="gap-cell"></td>
+        <td class="sig-cell">Signature</td>
+      </tr>
     </table>
   </div>
 
-  <table class="fee-table">
-    <thead>
-      <tr><th>Fee Description</th><th style="text-align:right">Month</th><th style="text-align:right">Amount (₹)</th></tr>
-    </thead>
-    <tbody>
-      {% if record.tuition_fee %}<tr><td>Tuition Fee</td><td class="amount">{{ record.get_month_display }}</td><td class="amount">{{ record.tuition_fee }}</td></tr>{% endif %}
-      {% if record.dearness_fee %}<tr><td>Dearness Fee</td><td class="amount">{{ record.get_month_display }}</td><td class="amount">{{ record.dearness_fee }}</td></tr>{% endif %}
-      {% if record.registration_fee %}<tr><td>Registration Fee</td><td class="amount">—</td><td class="amount">{{ record.registration_fee }}</td></tr>{% endif %}
-      {% if record.admission_fee %}<tr><td>Admission Fee</td><td class="amount">—</td><td class="amount">{{ record.admission_fee }}</td></tr>{% endif %}
-      {% if record.annual_compulsory %}<tr><td>Annual Compulsory Payment</td><td class="amount">—</td><td class="amount">{{ record.annual_compulsory }}</td></tr>{% endif %}
-      {% if record.miscellaneous_dues %}<tr><td>Miscellaneous Dues</td><td class="amount">—</td><td class="amount">{{ record.miscellaneous_dues }}</td></tr>{% endif %}
-      <tr class="total-row"><td colspan="2">TOTAL PAID</td><td class="amount">₹ {{ record.total_paid }}</td></tr>
-    </tbody>
-  </table>
-
-  <p>
-    <strong>Payment Mode:</strong>
-    <span class="payment-badge">{{ record.get_payment_mode_display }}</span>
-    {% if record.cheque_number %}&nbsp;<strong>Cheque No:</strong> {{ record.cheque_number }}{% endif %}
-  </p>
-
-  <div class="footer">
-    <div class="sig"><div class="sig-line">Parent / Guardian Signature</div></div>
-    <p style="font-size:11px; color:#888;">Collected by: {{ record.collected_by.get_full_name|default:record.collected_by.username }}</p>
-    <div class="sig"><div class="sig-line">Authorised Signatory</div></div>
-  </div>
 </div>
+{% if not forloop.last %}
+<div class="cut-line">&#9988; &nbsp; CUT HERE &nbsp; &#9988;</div>
+{% endif %}
+{% endfor %}
+{% if not pdf_mode %}
+<script>
+  // Prevent browser back button from going to the POST form (resubmission popup)
+  history.pushState(null, '', window.location.href);
+  window.addEventListener('popstate', function () {
+    window.location.href = "{% url 'fees:fee_entry_select' %}";
+  });
+</script>
+{% endif %}
 </body>
 </html>
