@@ -11,6 +11,7 @@ urlpatterns = [
     path('record/<int:pk>/receipt/', views.receipt_html, name='receipt_html'),
     path('record/<int:pk>/receipt/pdf/', views.receipt_pdf, name='receipt_pdf'),
     path('reports/monthly/', views.monthly_report, name='monthly_report'),
+    path('reports/total/', views.total_collection, name='total_collection'),
     path('reports/defaulters/', views.defaulters, name='defaulters'),
     path('structure/', views.fee_structure_list, name='structure_list'),
     path('structure/edit/<int:year_pk>/<int:class_pk>/', views.fee_structure_edit, name='structure_edit'),
