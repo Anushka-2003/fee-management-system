@@ -115,13 +115,19 @@ def fee_record_detail(request, pk):
 @login_required
 def receipt_html(request, pk):
     record = get_object_or_404(FeeRecord, pk=pk)
-    return render(request, 'fees/receipt.html', {'record': record})
+    return render(request, 'fees/receipt.html', {
+        'record': record,
+        'copy_labels': ['School Copy', "Parent's Copy"],
+    })
 
 
 @login_required
 def receipt_pdf(request, pk):
     record = get_object_or_404(FeeRecord, pk=pk)
-    html_string = render_to_string('fees/receipt.html', {'record': record, 'pdf_mode': True})
+    html_string = render_to_string('fees/receipt.html', {
+        'record': record, 'pdf_mode': True,
+        'copy_labels': ['School Copy', "Parent's Copy"],
+    })
     buffer = io.BytesIO()
     pisa.CreatePDF(html_string, dest=buffer)
     pdf = buffer.getvalue()
@@ -160,6 +166,64 @@ def monthly_report(request):
         'total_registration': total_registration, 'total_admission': total_admission,
         'all_years': all_years,
         'months': FeeRecord.MONTH_CHOICES,
+    })
+
+
+@login_required
+def total_collection(request):
+    year = AcademicYear.get_current()
+    year_id = request.GET.get('year_id', '')
+    if year_id:
+        year = get_object_or_404(AcademicYear, pk=year_id)
+
+    selected_months = request.GET.getlist('months')
+    selected_months = [int(m) for m in selected_months if m.isdigit()]
+    generated = 'months' in request.GET
+
+    records = list(FeeRecord.objects.filter(
+        academic_year=year, month__in=selected_months
+    ))
+
+    totals = {
+        'tuition':      sum(r.tuition_fee for r in records),
+        'dearness':     sum(r.dearness_fee for r in records),
+        'misc':         sum(r.miscellaneous_dues for r in records),
+        'annual':       sum(r.annual_compulsory for r in records),
+        'registration': sum(r.registration_fee for r in records),
+        'admission':    sum(r.admission_fee for r in records),
+    }
+    totals['grand'] = sum(totals.values())
+
+    # Per-month breakdown
+    month_name_map = dict(FeeRecord.MONTH_CHOICES)
+    month_breakdown = []
+    for m in selected_months:
+        month_records = [r for r in records if r.month == m]
+        if not month_records:
+            continue
+        month_total = sum(r.total_paid for r in month_records)
+        month_breakdown.append({
+            'name': month_name_map.get(m, str(m)),
+            'count': len(month_records),
+            'tuition':      sum(r.tuition_fee for r in month_records),
+            'dearness':     sum(r.dearness_fee for r in month_records),
+            'misc':         sum(r.miscellaneous_dues for r in month_records),
+            'annual':       sum(r.annual_compulsory for r in month_records),
+            'registration': sum(r.registration_fee for r in month_records),
+            'admission':    sum(r.admission_fee for r in month_records),
+            'total':        month_total,
+        })
+
+    all_years = AcademicYear.objects.all()
+    return render(request, 'fees/total_collection.html', {
+        'year': year,
+        'all_years': all_years,
+        'selected_months': selected_months,
+        'months': FeeRecord.MONTH_CHOICES,
+        'totals': totals,
+        'record_count': len(records),
+        'month_breakdown': month_breakdown,
+        'generated': generated,
     })
 
 
