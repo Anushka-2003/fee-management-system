@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}Total Collection Report{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h3 class="fw-bold mb-0"><i class="bi bi-cash-stack me-2"></i>Total Collection Report</h3>
+  <button class="btn btn-outline-secondary btn-lg no-print" onclick="window.print()">
+    <i class="bi bi-printer me-1"></i>Print
+  </button>
+</div>
+
+<!-- Filter Card -->
+<div class="card mb-4 no-print">
+  <div class="card-body">
+    <form method="get">
+      <div class="row g-3 align-items-start">
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Academic Year</label>
+          <select name="year_id" class="form-select">
+            {% for y in all_years %}
+              <option value="{{ y.pk }}" {% if y == year %}selected{% endif %}>{{ y.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label fw-semibold">Select Months</label>
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px;">
+            {% for num, name in months %}
+            <label class="border rounded px-2 py-1 text-center mb-0"
+                   style="cursor:pointer; user-select:none; font-size:.875rem; transition:background .1s, border-color .1s;"
+                   onmouseover="if(!this.querySelector('input').checked){this.style.background='#e8f0fe'; this.style.borderColor='#4285f4'}"
+                   onmouseout="if(!this.querySelector('input').checked){this.style.background=''; this.style.borderColor=''}"
+                   onclick="styleMonthLabel(this)">
+              <input type="checkbox" name="months" value="{{ num }}" class="d-none"
+                {% if num in selected_months %}checked{% endif %}>
+              {{ name }}
+            </label>
+            {% endfor %}
+          </div>
+          <div class="mt-2 d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAllMonths()">Select All</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearMonths()">Clear All</button>
+            <button type="submit" class="btn btn-sm btn-primary ms-auto">
+              <i class="bi bi-search me-1"></i>Generate
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Month-wise Breakdown -->
+{% if not generated %}
+<div class="card mb-4">
+  <div class="card-body text-center py-5 text-muted">
+    <i class="bi bi-bar-chart-steps fs-1 d-block mb-3"></i>
+    Select months above and click <strong>Generate</strong> to view the report.
+  </div>
+</div>
+{% else %}
+{% if month_breakdown|length > 1 %}
+<div class="card mb-4">
+  <div class="card-header bg-white fw-semibold">
+    <i class="bi bi-bar-chart-steps me-1"></i>Month-wise Contribution
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover table-sm mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Month</th>
+          <th class="text-end">Tuition</th>
+          <th class="text-end">Dearness</th>
+          <th class="text-end">Misc</th>
+          <th class="text-end">Annual</th>
+          <th class="text-end">Reg</th>
+          <th class="text-end">Adm</th>
+          <th class="text-end fw-bold">Total (Rs.)</th>
+          <th class="text-end text-muted">Payments</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in month_breakdown %}
+        <tr>
+          <td class="fw-semibold">{{ m.name }}</td>
+          <td class="text-end font-monospace">{{ m.tuition|floatformat:0 }}</td>
+          <td class="text-end font-monospace">{{ m.dearness|floatformat:0 }}</td>
+          <td class="text-end font-monospace">{{ m.misc|floatformat:0 }}</td>
+          <td class="text-end font-monospace">{{ m.annual|floatformat:0 }}</td>
+          <td class="text-end font-monospace">{{ m.registration|floatformat:0 }}</td>
+          <td class="text-end font-monospace">{{ m.admission|floatformat:0 }}</td>
+          <td class="text-end fw-bold text-success font-monospace">{{ m.total|floatformat:2 }}</td>
+          <td class="text-end text-muted">{{ m.count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot class="table-secondary fw-bold">
+        <tr>
+          <td>Total</td>
+          <td class="text-end font-monospace">{{ totals.tuition|floatformat:0 }}</td>
+          <td class="text-end font-monospace">{{ totals.dearness|floatformat:0 }}</td>
+          <td class="text-end font-monospace">{{ totals.misc|floatformat:0 }}</td>
+          <td class="text-end font-monospace">{{ totals.annual|floatformat:0 }}</td>
+          <td class="text-end font-monospace">{{ totals.registration|floatformat:0 }}</td>
+          <td class="text-end font-monospace">{{ totals.admission|floatformat:0 }}</td>
+          <td class="text-end text-success font-monospace">{{ totals.grand|floatformat:2 }}</td>
+          <td class="text-end text-muted">{{ record_count }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Fee Head Summary -->
+<div class="card mb-4">
+  <div class="card-header bg-white fw-semibold">
+    <i class="bi bi-info-circle me-1"></i>
+    Fee Head Summary &mdash; {{ year.name }} &mdash;
+    {% if selected_months|length == 12 %}
+      All Months
+    {% else %}
+      {% for num, name in months %}{% if num in selected_months %}{{ name }}{% if not forloop.last %}, {% endif %}{% endif %}{% endfor %}
+    {% endif %}
+    &mdash; {{ record_count }} payment{{ record_count|pluralize }}
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th style="width:50%">Fee Head</th>
+          <th class="text-end">Amount Collected (Rs.)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Tuition Fee</td>
+          <td class="text-end font-monospace">{{ totals.tuition|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Dearness Fee</td>
+          <td class="text-end font-monospace">{{ totals.dearness|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Other Miscellaneous Dues</td>
+          <td class="text-end font-monospace">{{ totals.misc|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Annual Compulsory Payment</td>
+          <td class="text-end font-monospace">{{ totals.annual|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Registration Fee <span class="badge bg-secondary">New</span></td>
+          <td class="text-end font-monospace">{{ totals.registration|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Admission Form Fee <span class="badge bg-secondary">New</span></td>
+          <td class="text-end font-monospace">{{ totals.admission|floatformat:2 }}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr class="table-success fw-bold fs-5">
+          <td>Grand Total</td>
+          <td class="text-end font-monospace">Rs. {{ totals.grand|floatformat:2 }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+{% endif %}{# end generated #}
+
+<script>
+const SELECTED_STYLE = { background: '#0d6efd', borderColor: '#0d6efd', color: '#fff' };
+const DEFAULT_STYLE  = { background: '', borderColor: '', color: '' };
+
+function applyLabelStyle(label) {
+  const checked = label.querySelector('input').checked;
+  label.style.background   = checked ? SELECTED_STYLE.background : DEFAULT_STYLE.background;
+  label.style.borderColor  = checked ? SELECTED_STYLE.borderColor : DEFAULT_STYLE.borderColor;
+  label.style.color        = checked ? SELECTED_STYLE.color : DEFAULT_STYLE.color;
+}
+
+function styleMonthLabel(label) {
+  const cb = label.querySelector('input');
+  cb.checked = !cb.checked;
+  applyLabelStyle(label);
+}
+
+function selectAllMonths() {
+  document.querySelectorAll('input[name="months"]').forEach(cb => {
+    cb.checked = true;
+    applyLabelStyle(cb.closest('label'));
+  });
+}
+
+function clearMonths() {
+  document.querySelectorAll('input[name="months"]').forEach(cb => {
+    cb.checked = false;
+    applyLabelStyle(cb.closest('label'));
+  });
+}
+
+// Apply styles on page load for pre-selected months
+document.querySelectorAll('input[name="months"]').forEach(cb => applyLabelStyle(cb.closest('label')));
+</script>
+{% endblock %}
