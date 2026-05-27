@@ -9,11 +9,15 @@
 <div class="card mb-3">
   <div class="card-body">
     <form method="get" class="row g-2 align-items-end">
-      <div class="col-md-5">
+      <div class="col-md-4">
         <label class="form-label fw-semibold">Search by Name</label>
         <input type="text" name="q" value="{{ q }}" class="form-control form-control-lg" placeholder="Student name...">
       </div>
-      <div class="col-md-4">
+      <div class="col-md-2">
+        <label class="form-label fw-semibold">Serial No.</label>
+        <input type="text" name="serial" value="{{ serial_filter }}" class="form-control form-control-lg" placeholder="e.g. 42">
+      </div>
+      <div class="col-md-3">
         <label class="form-label fw-semibold">Filter by Class</label>
         <select name="class_id" class="form-select form-select-lg">
           <option value="">All Classes</option>
