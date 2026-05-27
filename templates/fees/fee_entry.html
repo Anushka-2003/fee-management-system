@@ -99,18 +99,18 @@
           <i class="bi bi-credit-card"></i> Payment Details
         </div>
         <div class="card-body p-4">
-          <div class="row g-3 align-items-end">
+          <div class="row g-3 align-items-start">
             <div class="col-md-5">
-              <label class="form-label fw-bold fs-5">Total Amount (₹)</label>
+              <label class="form-label fw-semibold">Total Amount (₹)</label>
               {{ form.total_paid }}
               <div class="form-text">Auto-calculated</div>
             </div>
             <div class="col-md-4">
-              <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
+              <label class="form-label fw-semibold">Payment Mode <span class="text-danger">*</span></label>
               {{ form.payment_mode }}
             </div>
             <div class="col-md-3" id="cheque-row" style="display:none">
-              <label class="form-label">Cheque No. <span class="text-danger">*</span></label>
+              <label class="form-label fw-semibold">Cheque No. <span class="text-danger">*</span></label>
               {{ form.cheque_number }}
               {% if form.cheque_number.errors %}<div class="text-danger small mt-1">{{ form.cheque_number.errors.0 }}</div>{% endif %}
             </div>
