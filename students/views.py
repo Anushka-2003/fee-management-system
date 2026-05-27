@@ -13,15 +13,18 @@ def student_list(request):
 
     q = request.GET.get('q', '').strip()
     class_filter = request.GET.get('class_id', '')
+    serial_filter = request.GET.get('serial', '').strip()
     if q:
         students = students.filter(name__icontains=q)
     if class_filter:
         students = students.filter(school_class_id=class_filter)
+    if serial_filter:
+        students = students.filter(serial_number=serial_filter)
 
     classes = SchoolClass.objects.all()
     return render(request, 'students/student_list.html', {
         'students': students, 'q': q, 'classes': classes,
-        'selected_class': class_filter, 'year': year,
+        'selected_class': class_filter, 'serial_filter': serial_filter, 'year': year,
     })
 
 
