@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from students.models import Student, SchoolClass, AcademicYear
 from accounts.models import CustomUser
@@ -64,6 +65,7 @@ class FeeRecord(models.Model):
     received_by = models.CharField(max_length=20, choices=RECEIVER_CHOICES, default=RECEIVER_SANGEETA)
     received_by_other = models.CharField(max_length=100, blank=True, default='')
     receipt_number = models.CharField(max_length=30, unique=True, editable=False)
+    batch_id = models.UUIDField(null=True, blank=True, db_index=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
