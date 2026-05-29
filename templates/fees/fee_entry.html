@@ -42,7 +42,8 @@
                        onmouseout="if(!this.querySelector('input').checked){this.style.background='';this.style.borderColor=''}"
                        onclick="toggleMonth(this, event)">
                   <input type="checkbox" name="months" value="{{ num }}" class="d-none"
-                    {% if form.is_bound and num|stringformat:"s" in form.data.getlist('months') %}checked{% endif %}>
+                    {% if num in selected_months %}checked{% endif %}>
+
                   {{ name }}
                 </label>
                 {% endfor %}
