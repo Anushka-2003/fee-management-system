@@ -16,16 +16,20 @@ class FeeStructureForm(forms.ModelForm):
 
 
 class FeeRecordForm(forms.ModelForm):
+    months = forms.MultipleChoiceField(
+        choices=FeeRecord.MONTH_CHOICES,
+        error_messages={'required': 'Please select at least one month.'},
+    )
+
     class Meta:
         model = FeeRecord
         fields = [
-            'month', 'tuition_fee', 'dearness_fee', 'registration_fee',
+            'tuition_fee', 'dearness_fee', 'registration_fee',
             'miscellaneous_dues', 'admission_fee', 'annual_compulsory',
             'total_paid', 'collection_date', 'payment_mode', 'cheque_number',
             'received_by', 'received_by_other',
         ]
         widgets = {
-            'month': forms.Select(attrs={'class': 'form-select form-select-lg'}),
             'tuition_fee': forms.NumberInput(attrs={'class': 'form-control form-control-lg fee-field', 'step': '0.01', 'min': '0'}),
             'dearness_fee': forms.NumberInput(attrs={'class': 'form-control form-control-lg fee-field', 'step': '0.01', 'min': '0'}),
             'registration_fee': forms.NumberInput(attrs={'class': 'form-control form-control-lg fee-field', 'step': '0.01', 'min': '0'}),
