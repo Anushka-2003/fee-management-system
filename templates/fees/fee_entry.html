@@ -29,13 +29,34 @@
         </div>
         <div class="card-body p-4">
           <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Month <span class="text-danger">*</span></label>
-              {{ form.month }}
-              {% if form.month.errors %}<div class="text-danger small mt-1">{{ form.month.errors.0 }}</div>{% endif %}
+            <div class="col-12">
+              <label class="form-label">Month(s) <span class="text-danger">*</span>
+                <span class="text-muted fw-normal small ms-1">— select one or more</span>
+              </label>
+              <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px;">
+                {% for num, name in month_choices %}
+                <label class="border rounded px-2 py-1 text-center mb-0 month-tile"
+                       data-val="{{ num }}"
+                       style="cursor:pointer; user-select:none; font-size:.875rem; transition:background .1s, border-color .1s;"
+                       onmouseover="if(!this.querySelector('input').checked){this.style.background='#e8f0fe';this.style.borderColor='#4285f4'}"
+                       onmouseout="if(!this.querySelector('input').checked){this.style.background='';this.style.borderColor=''}"
+                       onclick="toggleMonth(this, event)">
+                  <input type="checkbox" name="months" value="{{ num }}" class="d-none"
+                    {% if form.is_bound and num|stringformat:"s" in form.data.getlist('months') %}checked{% endif %}>
+                  {{ name }}
+                </label>
+                {% endfor %}
+              </div>
+              {% if form.months.errors %}
+              <div class="text-danger small mt-1">{{ form.months.errors.0 }}</div>
+              {% endif %}
+              <div class="form-text mt-1">
+                <i class="bi bi-info-circle me-1"></i>
+                Annual / Registration / Admission fees are applied only to the first selected month.
+              </div>
             </div>
             <div class="col-md-6">
-              <label class="form-label">Collection Date <span class="text-danger">*</span></label>
+              <label class="form-label fw-semibold">Collection Date <span class="text-danger">*</span></label>
               {{ form.collection_date }}
             </div>
           </div>
@@ -213,16 +234,45 @@
 
 {% block extra_js %}
 <script>
-  const feeFields = document.querySelectorAll('.fee-field');
   const totalField = document.getElementById('id_total_paid');
+  const MONTHLY_IDS  = ['id_tuition_fee', 'id_dearness_fee', 'id_miscellaneous_dues'];
+  const ONETIME_IDS  = ['id_annual_compulsory', 'id_registration_fee', 'id_admission_fee'];
+
+  function selectedMonthCount() {
+    return document.querySelectorAll('input[name="months"]:checked').length || 1;
+  }
 
   function recalc() {
+    const n = selectedMonthCount();
     let total = 0;
-    feeFields.forEach(f => { total += parseFloat(f.value) || 0; });
+    MONTHLY_IDS.forEach(id => { total += (parseFloat(document.getElementById(id)?.value) || 0) * n; });
+    ONETIME_IDS.forEach(id => { total += parseFloat(document.getElementById(id)?.value) || 0; });
     totalField.value = total.toFixed(2);
   }
-  feeFields.forEach(f => f.addEventListener('input', recalc));
+
+  document.querySelectorAll('.fee-field').forEach(f => f.addEventListener('input', recalc));
+  document.querySelectorAll('input[name="months"]').forEach(cb => cb.addEventListener('change', recalc));
   recalc();
+
+  // Month tile toggle
+  const SELECTED = { background: '#0d6efd', borderColor: '#0d6efd', color: '#fff' };
+  const DEFAULT  = { background: '', borderColor: '', color: '' };
+  function applyTileStyle(tile) {
+    const checked = tile.querySelector('input').checked;
+    tile.style.background  = checked ? SELECTED.background  : DEFAULT.background;
+    tile.style.borderColor = checked ? SELECTED.borderColor : DEFAULT.borderColor;
+    tile.style.color       = checked ? SELECTED.color       : DEFAULT.color;
+  }
+  function toggleMonth(tile, event) {
+    event.preventDefault();
+    const cb = tile.querySelector('input');
+    cb.checked = !cb.checked;
+    applyTileStyle(tile);
+    recalc();
+  }
+
+  // Apply styles on page load (restores state after validation error)
+  document.querySelectorAll('.month-tile').forEach(tile => applyTileStyle(tile));
 
   const modeSelect = document.getElementById('id_payment_mode');
   const chequeRow = document.getElementById('cheque-row');
@@ -241,6 +291,8 @@
   toggleReceiverOther();
 
   function confirmSubmit() {
+    const n = selectedMonthCount();
+    if (n === 0) { alert('Please select at least one month.'); return; }
     document.getElementById('confirm-amount').textContent = '₹' + totalField.value;
     new bootstrap.Modal(document.getElementById('confirmModal')).show();
   }
