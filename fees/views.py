@@ -153,6 +153,8 @@ def fee_entry(request, student_pk):
         'is_first_payment': is_first_payment,
         'annual_already_paid': annual_already_paid,
         'month_choices': FeeRecord.MONTH_CHOICES,
+        'selected_months': [int(m) for m in request.POST.getlist('months')] if request.method == 'POST' else [],
+
     })
 
 
