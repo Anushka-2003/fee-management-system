@@ -1,5 +1,9 @@
 db.sqlite3
 .env
 venv/
-pycache/
+__pycache__/
+*.pyc
+*.pyo
+staticfiles/
+*.log
 .vscode/
