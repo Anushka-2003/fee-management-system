@@ -1,58 +1,106 @@
 {% extends "base.html" %}
 {% block title %}{{ student.name }}{% endblock %}
 {% block content %}
-<div class="d-flex align-items-center mb-4 gap-3">
+
+<div class="page-header d-flex align-items-center gap-3">
   <a href="{% url 'students:list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
-  <div>
-    <h3 class="fw-bold mb-0">{{ student.name }}</h3>
-    <span class="text-muted">{{ student.school_class }} &bull; {{ student.get_enrollment_type_display }}</span>
+  <div class="flex-grow-1">
+    <h3 class="mb-0">{{ student.name }}</h3>
+    <div class="sub">{{ student.school_class }} &bull; {{ student.get_enrollment_type_display }} &bull; <span class="year-badge">{{ student.academic_year.name }}</span></div>
   </div>
-  <div class="ms-auto d-flex gap-2">
-    <a href="{% url 'students:edit' student.pk %}" class="btn btn-outline-secondary">Edit</a>
+  <div class="d-flex gap-2">
+    <a href="{% url 'students:edit' student.pk %}" class="btn btn-outline-secondary"><i class="bi bi-pencil me-1"></i>Edit</a>
     {% if user.is_admin %}
-    <a href="{% url 'students:delete' student.pk %}" class="btn btn-outline-danger">Delete</a>
+    <a href="{% url 'students:delete' student.pk %}" class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i>Delete</a>
     {% endif %}
   </div>
 </div>
 
-<div class="row g-3">
-  <div class="col-md-4">
-    <div class="card">
-      <div class="card-header bg-white"><i class="bi bi-person-badge me-2"></i>Student Details</div>
-      <div class="card-body">
-        <table class="table table-sm mb-0">
-          <tr><th>Serial No.</th><td>{{ student.serial_number }}</td></tr>
-          <tr><th>Class</th><td>{{ student.school_class }}</td></tr>
-          <tr><th>Enrolment</th><td>{{ student.get_enrollment_type_display }}</td></tr>
-          <tr><th>Gender</th><td>{{ student.get_gender_display }}</td></tr>
-          <tr><th>Date of Birth</th><td>{{ student.date_of_birth|date:"d M Y"|default:"—" }}</td></tr>
-          <tr><th>Age</th><td>{% if student.age %}{{ student.age }} years{% else %}—{% endif %}</td></tr>
-          <tr><th>Father</th><td>{{ student.father_name }}</td></tr>
-          <tr><th>Mother</th><td>{{ student.mother_name }}</td></tr>
-          <tr><th>Admitted</th><td>{{ student.date_of_admission }}</td></tr>
-          <tr><th>Year</th><td>{{ student.academic_year.name }}</td></tr>
-          <tr><th>Active</th><td>{% if student.is_active %}<span class="text-success">Yes</span>{% else %}<span class="text-danger">No</span>{% endif %}</td></tr>
-          <tr><td colspan="2"><hr class="my-1"></td></tr>
-          <tr><th>Added by</th><td>{{ student.created_by.get_full_name|default:student.created_by.username|default:"—" }}</td></tr>
-          <tr><th>Added on</th><td>{{ student.created_at|date:"d M Y, h:i A" }}</td></tr>
-          <tr><th>Last edited by</th><td>{{ student.updated_by.get_full_name|default:student.updated_by.username|default:"—" }}</td></tr>
-          <tr><th>Last edited on</th><td>{{ student.updated_at|date:"d M Y, h:i A" }}</td></tr>
+<div class="row g-4">
+
+  <!-- Left column: student info + action -->
+  <div class="col-xl-4 col-lg-5">
+
+    <!-- Identity card -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
+        <i class="bi bi-person-badge"></i> Identification
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0" style="font-size:.97rem;">
+          <tbody>
+            <tr><td class="text-muted ps-3" style="width:45%">Serial No.</td><td class="fw-semibold pe-3">{{ student.serial_number }}</td></tr>
+            <tr><td class="text-muted ps-3">Class</td><td class="fw-semibold pe-3">{{ student.school_class }}</td></tr>
+            <tr><td class="text-muted ps-3">Enrolment</td><td class="pe-3">
+              {% if student.is_new %}<span class="badge bg-success">New</span>{% else %}<span class="badge bg-secondary">Re-Enrolment</span>{% endif %}
+            </td></tr>
+            <tr><td class="text-muted ps-3">Gender</td><td class="pe-3">{{ student.get_gender_display }}</td></tr>
+            <tr><td class="text-muted ps-3">Date of Birth</td><td class="pe-3">{{ student.date_of_birth|date:"d M Y"|default:"—" }}</td></tr>
+            <tr><td class="text-muted ps-3">Age</td><td class="pe-3">{% if student.age %}{{ student.age }} years{% else %}—{% endif %}</td></tr>
+            <tr><td class="text-muted ps-3">Status</td><td class="pe-3">
+              {% if student.is_active %}<span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>{% else %}<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Inactive</span>{% endif %}
+            </td></tr>
+          </tbody>
         </table>
       </div>
     </div>
-    <div class="mt-3">
-      <a href="{% url 'fees:fee_entry' student.pk %}" class="btn btn-primary btn-lg w-100">
-        <i class="bi bi-cash-coin me-2"></i>Record New Fee
-      </a>
+
+    <!-- Parent details card -->
+    <div class="card mb-4">
+      <div class="card-header bg-white d-flex align-items-center gap-2" style="color:#2d6099;">
+        <i class="bi bi-people"></i> Parent / Guardian
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0" style="font-size:.97rem;">
+          <tbody>
+            <tr><td class="text-muted ps-3" style="width:45%">Father</td><td class="fw-semibold pe-3">{{ student.father_name }}</td></tr>
+            <tr><td class="text-muted ps-3">Mother</td><td class="fw-semibold pe-3">{{ student.mother_name }}</td></tr>
+            <tr><td class="text-muted ps-3">Admitted</td><td class="pe-3">{{ student.date_of_admission|date:"d M Y" }}</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
+
+    {% if user.is_admin %}
+    <!-- Audit trail — admin only -->
+    <div class="card mb-4">
+      <div class="card-header bg-white d-flex align-items-center gap-2 text-muted">
+        <i class="bi bi-shield-lock"></i> Audit Trail <small>(Admin only)</small>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0" style="font-size:.9rem;">
+          <tbody>
+            <tr><td class="text-muted ps-3" style="width:45%">Added by</td><td class="pe-3">{{ student.created_by.get_full_name|default:student.created_by.username|default:"—" }}</td></tr>
+            <tr><td class="text-muted ps-3">Added on</td><td class="pe-3">{{ student.created_at|date:"d M Y, h:i A" }}</td></tr>
+            <tr><td class="text-muted ps-3">Edited by</td><td class="pe-3">{{ student.updated_by.get_full_name|default:student.updated_by.username|default:"—" }}</td></tr>
+            <tr><td class="text-muted ps-3">Edited on</td><td class="pe-3">{{ student.updated_at|date:"d M Y, h:i A" }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Action button -->
+    <a href="{% url 'fees:fee_entry' student.pk %}" class="btn btn-primary btn-lg w-100 mb-4">
+      <i class="bi bi-cash-coin me-2"></i>Record New Fee
+    </a>
+
   </div>
 
-  <div class="col-md-8">
+  <!-- Right column: fee history -->
+  <div class="col-xl-8 col-lg-7">
     <div class="card">
-      <div class="card-header bg-white"><i class="bi bi-clock-history me-2"></i>Fee History (All Years)</div>
+      <div class="card-header bg-white d-flex align-items-center gap-2" style="color:#2d6099;">
+        <i class="bi bi-clock-history"></i> Fee History (All Sessions)
+      </div>
       <div class="table-responsive">
         <table class="table table-hover mb-0">
-          <thead><tr><th>Receipt</th><th>Year</th><th>Month</th><th>Total</th><th>Mode</th><th>Date</th><th></th></tr></thead>
+          <thead>
+            <tr>
+              <th>Receipt</th><th>Year</th><th>Month</th>
+              <th>Total</th><th>Mode</th><th>Date</th><th></th>
+            </tr>
+          </thead>
           <tbody>
             {% for r in fee_records %}
             <tr>
@@ -60,9 +108,9 @@
               <td>{{ r.academic_year.name }}</td>
               <td>{{ r.get_month_display }}</td>
               <td class="fw-bold text-success">₹{{ r.total_paid }}</td>
-              <td><span class="badge bg-secondary">{{ r.get_payment_mode_display }}</span></td>
+              <td><span class="badge bg-light text-dark border">{{ r.get_payment_mode_display }}</span></td>
               <td>{{ r.collection_date|date:"d M Y" }}</td>
-              <td><a href="{% url 'fees:receipt_html' r.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-receipt"></i></a></td>
+              <td><a href="{% url 'fees:receipt_html' r.pk %}" class="btn btn-sm btn-outline-primary py-0"><i class="bi bi-receipt"></i></a></td>
             </tr>
             {% empty %}
             <tr><td colspan="7" class="text-center text-muted py-4">No fee records found.</td></tr>
@@ -72,5 +120,6 @@
       </div>
     </div>
   </div>
+
 </div>
 {% endblock %}
