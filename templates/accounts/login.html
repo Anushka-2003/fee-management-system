@@ -2,35 +2,48 @@
 {% block title %}Login{% endblock %}
 
 {% block full_content %}
-<div class="min-vh-100 d-flex align-items-center justify-content-center bg-primary">
-  <div class="card shadow-lg" style="width: 420px;">
-    <div class="card-body p-5">
-      <div class="text-center mb-4">
-        <i class="bi bi-mortarboard-fill text-primary" style="font-size: 3rem;"></i>
-        <h2 class="mt-2 fw-bold">Shyama Memorial Rajdhani Public School</h2>
-        <p class="text-muted small">364/17, Saadatganj, Lucknow - 226003</p>
-        <p class="text-muted">Fee Management System</p>
+<div class="min-vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #1a3c5e 0%, #2d6099 100%);">
+  <div style="width:100%; max-width:440px; padding:1rem;">
+
+    <!-- School branding -->
+    <div class="text-center mb-4">
+      <div class="mb-3">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.15);">
+          <i class="bi bi-building text-white" style="font-size:2rem;"></i>
+        </span>
       </div>
-      <form method="post">
-        {% csrf_token %}
-        <div class="mb-3">
-          <label class="form-label">Username</label>
-          {{ form.username }}
-          {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>{% endif %}
-        </div>
-        <div class="mb-4">
-          <label class="form-label">Password</label>
-          {{ form.password }}
-          {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>{% endif %}
-        </div>
-        {% if form.non_field_errors %}
-        <div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>
-        {% endif %}
-        <button type="submit" class="btn btn-primary btn-lg w-100">
-          <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
-        </button>
-      </form>
+      <h5 class="fw-bold text-white mb-1">Shyama Memorial Rajdhani Public School</h5>
+      <p class="text-white-50 small mb-0">364/17, Saadatganj, Lucknow - 226003</p>
     </div>
+
+    <!-- Login card -->
+    <div class="card shadow-lg border-0" style="border-radius:16px;">
+      <div class="card-body p-4 p-md-5">
+        <h5 class="fw-bold text-center mb-1" style="color:#1a3c5e;">Fee Management System</h5>
+        <p class="text-muted text-center small mb-4">Sign in to continue</p>
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            {{ form.username }}
+            {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Password</label>
+            {{ form.password }}
+            {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>{% endif %}
+          </div>
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger py-2">{{ form.non_field_errors.0 }}</div>
+          {% endif %}
+          <button type="submit" class="btn btn-primary btn-lg w-100">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+          </button>
+        </form>
+      </div>
+    </div>
+
   </div>
 </div>
 {% endblock %}
