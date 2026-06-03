@@ -127,12 +127,12 @@
       <div class="sidebar-heading mt-2">Students</div>
       <ul class="nav flex-column">
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'students:list' %}">
+          <a class="nav-link {% if request.resolver_match.url_name == 'list' or request.resolver_match.url_name == 'detail' or request.resolver_match.url_name == 'delete' %}active{% endif %}" href="{% url 'students:list' %}">
             <i class="bi bi-people"></i> All Students
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'students:add' %}">
+          <a class="nav-link {% if request.resolver_match.url_name == 'add' or request.resolver_match.url_name == 'edit' %}active{% endif %}" href="{% url 'students:add' %}">
             <i class="bi bi-person-plus"></i> Add Student
           </a>
         </li>
@@ -141,17 +141,17 @@
       <div class="sidebar-heading mt-2">Reports</div>
       <ul class="nav flex-column">
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'fees:monthly_report' %}">
+          <a class="nav-link {% if request.resolver_match.url_name == 'monthly_report' %}active{% endif %}" href="{% url 'fees:monthly_report' %}">
             <i class="bi bi-table"></i> Monthly Report
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'fees:total_collection' %}">
+          <a class="nav-link {% if request.resolver_match.url_name == 'total_collection' %}active{% endif %}" href="{% url 'fees:total_collection' %}">
             <i class="bi bi-cash-stack"></i> Total Collection
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'fees:defaulters' %}">
+          <a class="nav-link {% if request.resolver_match.url_name == 'defaulters' %}active{% endif %}" href="{% url 'fees:defaulters' %}">
             <i class="bi bi-exclamation-triangle"></i> Defaulters
           </a>
         </li>
@@ -161,22 +161,22 @@
       <div class="sidebar-heading mt-2">Admin</div>
       <ul class="nav flex-column">
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'fees:structure_list' %}">
+          <a class="nav-link {% if 'structure' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'fees:structure_list' %}">
             <i class="bi bi-sliders"></i> Fee Structure
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'students:year_list' %}">
+          <a class="nav-link {% if 'year' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'students:year_list' %}">
             <i class="bi bi-calendar-range"></i> Academic Years
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'students:class_list' %}">
+          <a class="nav-link {% if 'class' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'students:class_list' %}">
             <i class="bi bi-diagram-3"></i> Classes
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'accounts:user_list' %}">
+          <a class="nav-link {% if 'user' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'accounts:user_list' %}">
             <i class="bi bi-shield-lock"></i> Users
           </a>
         </li>
