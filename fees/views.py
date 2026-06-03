@@ -49,15 +49,18 @@ def fee_entry_select(request):
 
     q = request.GET.get('q', '').strip()
     class_filter = request.GET.get('class_id', '')
+    serial_filter = request.GET.get('serial', '').strip()
     if q:
         students = students.filter(name__icontains=q)
     if class_filter:
         students = students.filter(school_class_id=class_filter)
+    if serial_filter:
+        students = students.filter(serial_number=serial_filter)
 
     classes = SchoolClass.objects.all()
     return render(request, 'fees/fee_entry_select.html', {
         'students': students, 'q': q, 'classes': classes,
-        'selected_class': class_filter, 'year': year,
+        'selected_class': class_filter, 'serial_filter': serial_filter, 'year': year,
     })
 
 
@@ -154,7 +157,6 @@ def fee_entry(request, student_pk):
         'annual_already_paid': annual_already_paid,
         'month_choices': FeeRecord.MONTH_CHOICES,
         'selected_months': [int(m) for m in request.POST.getlist('months')] if request.method == 'POST' else [],
-
     })
 
 
