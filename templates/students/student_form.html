@@ -1,69 +1,129 @@
 {% extends "base.html" %}
 {% block title %}{{ title }}{% endblock %}
 {% block content %}
-<div class="d-flex align-items-center mb-4 gap-3">
-  <a href="{% url 'students:list' %}" class="btn btn-outline-secondary btn-lg"><i class="bi bi-arrow-left"></i></a>
+
+<div class="page-header d-flex align-items-center gap-3">
+  <a href="{% url 'students:list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
   <div>
-    <h3 class="fw-bold mb-0">{{ title }}</h3>
-    {% if year %}<span class="year-badge">{{ year.name }}</span>{% endif %}
+    <h3 class="mb-0">{{ title }}</h3>
+    <div class="sub">
+      {% if year %}<span class="year-badge">{{ year.name }}</span>{% endif %}
+      &nbsp;Fields marked <span class="text-danger fw-bold">*</span> are required
+    </div>
   </div>
 </div>
-<div class="card" style="max-width:700px;">
-  <div class="card-body p-4">
-    <form method="post">
-      {% csrf_token %}
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label">Serial Number <span class="text-danger">*</span></label>
-          {{ form.serial_number }}
-          {% if form.serial_number.errors %}<div class="text-danger small">{{ form.serial_number.errors.0 }}</div>{% endif %}
+
+<form method="post" autocomplete="off">
+  {% csrf_token %}
+  <div class="row g-4">
+
+    <div class="col-xl-8 col-lg-9">
+
+      <!-- Identification -->
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
+          <i class="bi bi-person-badge"></i> Identification
         </div>
-        <div class="col-md-8">
-          <label class="form-label">Full Name <span class="text-danger">*</span></label>
-          {{ form.name }}
-          {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Class <span class="text-danger">*</span></label>
-          {{ form.school_class }}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Enrolment Type <span class="text-danger">*</span></label>
-          {{ form.enrollment_type }}
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Gender <span class="text-danger">*</span></label>
-          {{ form.gender }}
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Date of Birth</label>
-          {{ form.date_of_birth }}
-          {% if form.date_of_birth.errors %}<div class="text-danger small">{{ form.date_of_birth.errors.0 }}</div>{% endif %}
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Date of Admission <span class="text-danger">*</span></label>
-          {{ form.date_of_admission }}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Father's Name <span class="text-danger">*</span></label>
-          {{ form.father_name }}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Mother's Name <span class="text-danger">*</span></label>
-          {{ form.mother_name }}
-        </div>
-        <div class="col-md-6 d-flex align-items-end pb-2">
-          <div class="form-check">
-            {{ form.is_active }}
-            <label class="form-check-label fs-5 ms-2">Active Student</label>
+        <div class="card-body p-4">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label">Serial No. <span class="text-danger">*</span></label>
+              {{ form.serial_number }}
+              {% if form.serial_number.errors %}<div class="text-danger small mt-1">{{ form.serial_number.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-5">
+              <label class="form-label">Full Name <span class="text-danger">*</span></label>
+              {{ form.name }}
+              {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Class <span class="text-danger">*</span></label>
+              {{ form.school_class }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Enrolment Type <span class="text-danger">*</span></label>
+              {{ form.enrollment_type }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Gender <span class="text-danger">*</span></label>
+              {{ form.gender }}
+            </div>
+            <div class="col-md-4 d-flex align-items-end pb-1">
+              <div class="form-check mb-1">
+                {{ form.is_active }}
+                <label class="form-check-label ms-1 fw-semibold">Active Student</label>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="d-flex gap-2 mt-4">
-        <button type="submit" class="btn btn-primary btn-lg">Save Student</button>
-        <a href="{% url 'students:list' %}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+
+      <!-- Dates -->
+      <div class="card mb-4">
+        <div class="card-header bg-white d-flex align-items-center gap-2" style="color:#2d6099;">
+          <i class="bi bi-calendar3"></i> Dates
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Date of Birth <span class="text-muted fw-normal">(optional)</span></label>
+              {{ form.date_of_birth }}
+              {% if form.date_of_birth.errors %}<div class="text-danger small mt-1">{{ form.date_of_birth.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Date of Admission <span class="text-danger">*</span></label>
+              {{ form.date_of_admission }}
+            </div>
+          </div>
+        </div>
       </div>
-    </form>
+
+      <!-- Parent Details -->
+      <div class="card mb-4">
+        <div class="card-header bg-white d-flex align-items-center gap-2" style="color:#2d6099;">
+          <i class="bi bi-people"></i> Parent / Guardian Details
+        </div>
+        <div class="card-body p-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Father's Name <span class="text-danger">*</span></label>
+              {{ form.father_name }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Mother's Name <span class="text-danger">*</span></label>
+              {{ form.mother_name }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right info panel -->
+    <div class="col-xl-4 col-lg-3 d-none d-lg-block">
+      <div class="card border-0 sticky-top" style="top:80px; background:#eef4fb;">
+        <div class="card-body p-4">
+          <h6 class="fw-bold mb-3" style="color:#2d6099;"><i class="bi bi-info-circle me-2"></i>Quick Guide</h6>
+          <ul class="list-unstyled small text-muted" style="line-height:2.1;">
+            <li><i class="bi bi-check2 text-success me-1"></i> Serial No. must be unique within the session</li>
+            <li><i class="bi bi-check2 text-success me-1"></i> <strong>New</strong> — admission &amp; registration fee collected on first payment only</li>
+            <li><i class="bi bi-check2 text-success me-1"></i> <strong>Re-Enrolment</strong> — only monthly fees apply</li>
+            <li><i class="bi bi-check2 text-success me-1"></i> Date of Birth auto-calculates age on student profile</li>
+            <li><i class="bi bi-check2 text-success me-1"></i> Inactive students are hidden from fee entry</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
   </div>
-</div>
+
+  <!-- Action buttons -->
+  <div class="d-flex gap-2 justify-content-end mb-4">
+    <a href="{% url 'students:list' %}" class="btn btn-outline-secondary btn-lg px-4">Cancel</a>
+    <button type="submit" class="btn btn-primary btn-lg px-5">
+      <i class="bi bi-check2-circle me-2"></i>Save Student
+    </button>
+  </div>
+
+</form>
 {% endblock %}
