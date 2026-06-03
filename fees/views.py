@@ -1,10 +1,9 @@
 import io
-import uuid
 from datetime import date
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponse, Http404
+from django.http import JsonResponse, HttpResponse
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
 from students.models import Student, AcademicYear, SchoolClass
@@ -93,61 +92,13 @@ def fee_entry(request, student_pk):
 
     form = FeeRecordForm(request.POST or None, initial=initial)
     if request.method == 'POST' and form.is_valid():
-        months = sorted([int(m) for m in form.cleaned_data['months']])
-
-        # Check for already-recorded months
-        already_paid = FeeRecord.objects.filter(
-            student=student, academic_year=year, month__in=months
-        ).values_list('month', flat=True)
-        if already_paid:
-            month_name_map = dict(FeeRecord.MONTH_CHOICES)
-            names = ', '.join(month_name_map[m] for m in already_paid)
-            form.add_error('months', f'Fee already recorded for: {names}. Please deselect those months.')
-        else:
-            batch_id = uuid.uuid4() if len(months) > 1 else None
-
-            tuition  = form.cleaned_data['tuition_fee']
-            dearness = form.cleaned_data['dearness_fee']
-            misc     = form.cleaned_data['miscellaneous_dues']
-            annual   = form.cleaned_data['annual_compulsory']
-            reg      = form.cleaned_data['registration_fee']
-            adm      = form.cleaned_data['admission_fee']
-
-            records = []
-            for i, month in enumerate(months):
-                m_annual = annual if i == 0 else 0
-                m_reg    = reg    if i == 0 else 0
-                m_adm    = adm    if i == 0 else 0
-                m_total  = tuition + dearness + misc + m_annual + m_reg + m_adm
-
-                record = FeeRecord(
-                    student=student,
-                    academic_year=year,
-                    month=month,
-                    tuition_fee=tuition,
-                    dearness_fee=dearness,
-                    miscellaneous_dues=misc,
-                    annual_compulsory=m_annual,
-                    registration_fee=m_reg,
-                    admission_fee=m_adm,
-                    total_paid=m_total,
-                    collection_date=form.cleaned_data['collection_date'],
-                    payment_mode=form.cleaned_data['payment_mode'],
-                    cheque_number=form.cleaned_data['cheque_number'],
-                    received_by=form.cleaned_data['received_by'],
-                    received_by_other=form.cleaned_data['received_by_other'],
-                    collected_by=request.user,
-                    batch_id=batch_id,
-                )
-                record.save()
-                records.append(record)
-
-            if len(records) == 1:
-                messages.success(request, f'Fee recorded. Receipt: {records[0].receipt_number}')
-                return redirect('fees:receipt_html', pk=records[0].pk)
-            else:
-                messages.success(request, f'{len(records)} months recorded. Receipts: {records[0].receipt_number} – {records[-1].receipt_number}')
-                return redirect('fees:batch_receipt_html', batch_id=str(batch_id))
+        record = form.save(commit=False)
+        record.student = student
+        record.academic_year = year
+        record.collected_by = request.user
+        record.save()
+        messages.success(request, f'Fee recorded. Receipt: {record.receipt_number}')
+        return redirect('fees:receipt_html', pk=record.pk)
 
     return render(request, 'fees/fee_entry.html', {
         'form': form, 'student': student, 'year': year,
@@ -155,8 +106,6 @@ def fee_entry(request, student_pk):
         'is_new_student': student.is_new(),
         'is_first_payment': is_first_payment,
         'annual_already_paid': annual_already_paid,
-        'month_choices': FeeRecord.MONTH_CHOICES,
-        'selected_months': [int(m) for m in request.POST.getlist('months')] if request.method == 'POST' else [],
     })
 
 
@@ -188,51 +137,6 @@ def receipt_pdf(request, pk):
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'filename="receipt-{record.receipt_number}.pdf"'
     return response
-
-
-@login_required
-def batch_receipt_html(request, batch_id):
-    records = list(FeeRecord.objects.filter(batch_id=batch_id).order_by('month'))
-    if not records:
-        raise Http404
-    batch_totals = _batch_totals(records)
-    return render(request, 'fees/batch_receipt.html', {
-        'records': records,
-        'batch_totals': batch_totals,
-        'copy_labels': ['School Copy', "Parent's Copy"],
-    })
-
-
-@login_required
-def batch_receipt_pdf(request, batch_id):
-    records = list(FeeRecord.objects.filter(batch_id=batch_id).order_by('month'))
-    if not records:
-        raise Http404
-    batch_totals = _batch_totals(records)
-    html_string = render_to_string('fees/batch_receipt.html', {
-        'records': records, 'batch_totals': batch_totals,
-        'pdf_mode': True,
-        'copy_labels': ['School Copy', "Parent's Copy"],
-    })
-    buffer = io.BytesIO()
-    pisa.CreatePDF(html_string, dest=buffer)
-    pdf = buffer.getvalue()
-    response = HttpResponse(pdf, content_type='application/pdf')
-    response['Content-Disposition'] = f'filename="batch-receipt-{records[0].receipt_number}.pdf"'
-    return response
-
-
-def _batch_totals(records):
-    t = {
-        'tuition':      sum(r.tuition_fee for r in records),
-        'dearness':     sum(r.dearness_fee for r in records),
-        'misc':         sum(r.miscellaneous_dues for r in records),
-        'annual':       sum(r.annual_compulsory for r in records),
-        'registration': sum(r.registration_fee for r in records),
-        'admission':    sum(r.admission_fee for r in records),
-    }
-    t['grand'] = sum(t.values())
-    return t
 
 
 @login_required
